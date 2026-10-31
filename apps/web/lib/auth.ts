@@ -17,7 +17,10 @@ function createAuth() {
     trustedOrigins: [
       "https://thegrovecms.com",
       "https://www.thegrovecms.com",
-      ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+      "https://grove-crm.vercel.app",
+      ...[process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL, process.env.VERCEL_PROJECT_PRODUCTION_URL]
+        .filter(Boolean)
+        .map((h) => `https://${h}`),
     ],
     database: drizzleAdapter(db(), {
       provider: "pg",
