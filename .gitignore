@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+build
+coverage
+.env*
+!.env.example
+!.env.local.example
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+Claude outputs
