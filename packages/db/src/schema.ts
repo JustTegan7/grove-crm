@@ -221,6 +221,24 @@ export const activities = pgTable(
   ],
 );
 
+// Files attached to a business. The bytes live in a private Vercel Blob store;
+// downloads always go through /api/files/[id], which checks the workspace.
+export const contactFiles = pgTable(
+  "contact_files",
+  {
+    id: id(),
+    workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
+    contactId: uuid("contact_id").notNull().references(() => contacts.id, { onDelete: "cascade" }),
+    blobPathname: text("blob_pathname").notNull(),
+    name: text("name").notNull(),
+    contentType: text("content_type").notNull(),
+    size: integer("size").notNull(),
+    createdBy: text("created_by").references(() => user.id),
+    ...stamps,
+  },
+  (t) => [index("contact_files_contact").on(t.contactId), index("contact_files_ws_updated").on(t.workspaceId, t.updatedAt)],
+);
+
 export const waitlistSignups = pgTable("waitlist_signups", {
   id: id(),
   email: text("email").notNull().unique(),

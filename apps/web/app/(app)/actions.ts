@@ -6,6 +6,7 @@ import { getCtx, type Ctx } from "../../lib/services/ctx";
 import * as contacts from "../../lib/services/contacts";
 import * as tasks from "../../lib/services/tasks";
 import * as undo from "../../lib/services/undo";
+import * as files from "../../lib/services/files";
 
 // Thin wrappers: build ctx, call a service, refresh the pages.
 export type ActionResult = { ok: true; message: string; id?: string; undo?: string } | { ok: false; error: string };
@@ -60,4 +61,10 @@ export async function createReminderAction(f: FormData) {
 }
 export async function undoAction(token: string) {
   return run((ctx) => undo.applyUndo(ctx, token));
+}
+export async function uploadFileAction(f: FormData) {
+  return run((ctx) => files.uploadFile(ctx, { contactId: f.get("contactId"), file: f.get("file") }));
+}
+export async function deleteFileAction(id: string) {
+  return run((ctx) => files.deleteFile(ctx, { id }));
 }

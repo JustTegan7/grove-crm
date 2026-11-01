@@ -7,6 +7,8 @@ import { loadMembers, loadStages, loadSteps } from "../../../../lib/services/wor
 import { ProfileActions, ProfileForm, LogBox } from "../../../../components/app/Profile";
 import { TaskRow } from "../../../../components/app/TaskRow";
 import { ChannelIcon } from "../../../../components/app/Icons";
+import { FilesBox } from "../../../../components/app/FilesBox";
+import { listFiles } from "../../../../lib/services/files";
 import { addDays } from "@grove/core";
 
 export const metadata: Metadata = { title: "Business" };
@@ -25,7 +27,7 @@ export default async function BusinessPage({ params }: { params: Promise<{ id: s
     throw e;
   }
   const { contact: c, openTasks, history } = data;
-  const [stages, steps, members] = await Promise.all([loadStages(ctx.workspace.id), loadSteps(ctx.workspace.id), loadMembers(ctx.workspace.id)]);
+  const [stages, steps, members, files] = await Promise.all([loadStages(ctx.workspace.id), loadSteps(ctx.workspace.id), loadMembers(ctx.workspace.id), listFiles(ctx, c.id)]);
   const stage = stages.find((s) => s.id === c.stageId);
   const nextStepId = openTasks.find((t) => t.kind === "followup")?.cadenceStepId;
   const owner = members.find((m) => m.id === c.ownerId);
@@ -106,6 +108,17 @@ export default async function BusinessPage({ params }: { params: Promise<{ id: s
               </ol>
             </section>
           )}
+
+          <FilesBox
+            contactId={c.id}
+            files={files.map((f) => ({
+              id: f.id,
+              name: f.name,
+              contentType: f.contentType,
+              size: f.size,
+              date: f.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: ctx.workspace.timezone }),
+            }))}
+          />
 
           <section className="card space-y-4 p-5" aria-labelledby="h-activity">
             <h2 id="h-activity" className="font-bold">Activity</h2>

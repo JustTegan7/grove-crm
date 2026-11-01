@@ -83,6 +83,14 @@ The iPhone app comes after the web app. These choices cost little now and a lot 
 - **Businesses** search by name, niche and contact using a small fuzzy matcher in `@grove/core` (`search.ts`, tested): prefix, then word start, then initials ("mca" for Mill Creek Auto), then substring, then letters in order. No library. It searches the list the app layout already loads (up to 500), so no extra request per keystroke.
 - **Accessible as an ARIA combobox**: focus stays in the input, results are a listbox announced with `aria-activedescendant`, arrows, Home, End, Enter and Esc all work.
 
+## Files on a business (2026-11-01)
+
+- **Private Vercel Blob store.** Files are uploaded with `access: "private"` under `ws/<workspace>/contacts/<business>/<file id>-<safe name>`. The browser never gets a Blob URL. Every view and download goes through `/api/files/[id]`, which checks the signed-in member's workspace and that the business is not deleted.
+- **Server upload, 4 MB max for now**, because Vercel caps a request at 4.5 MB. Server action body limit is 4.5 MB. The phone app will use direct client uploads with short-lived tokens (decision 9 above) for bigger photos.
+- **Allowed types**: JPG, PNG, WebP, GIF, HEIC, PDF, TXT, CSV, Word, Excel and PowerPoint (`@grove/core` files.ts). Everything else is refused, so nothing a browser could run as a page is ever served.
+- **Removing a file deletes the bytes for real** and soft deletes the row, with an activity line. It is not undoable on purpose.
+- New table `contact_files` (migration 0001), applied automatically on the next Vercel deploy.
+
 ## Not decided yet
 
 - Offline sync engine for the phone (build simple "changes since" sync first, pick a library only if needed).
