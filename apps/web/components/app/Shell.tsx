@@ -2,22 +2,24 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { authClient } from "../../lib/auth-client";
 import { GroveLogo, GroveMark } from "../Logo";
 import { BottomTabs, SideNav } from "./Nav";
-import { NewLeadDialog, ReminderDialog, type BizOpt, type MemberOpt } from "./Dialogs";
+import { NewLeadDialog, ReminderDialog, type MemberOpt } from "./Dialogs";
+import { CommandPalette, type PaletteBiz } from "./CommandPalette";
 import { IconBell, IconPlus, IconSun } from "./Icons";
 
+function toggleTheme() {
+  const root = document.documentElement;
+  const isDark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  const next = isDark ? "light" : "dark";
+  root.dataset.theme = next;
+  try { localStorage.setItem("grove-theme", next); } catch {}
+}
+
 function ThemeToggle() {
-  function toggle() {
-    const root = document.documentElement;
-    const isDark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
-    const next = isDark ? "light" : "dark";
-    root.dataset.theme = next;
-    try { localStorage.setItem("grove-theme", next); } catch {}
-  }
-  return <button type="button" onClick={toggle} className="btn btn-ghost btn-sm" aria-label="Switch light or dark"><IconSun /></button>;
+  return <button type="button" onClick={toggleTheme} className="btn btn-ghost btn-sm" aria-label="Switch light or dark"><IconSun /></button>;
 }
 
 export function Shell({
@@ -32,7 +34,7 @@ export function Shell({
   children: React.ReactNode;
   me: { id: string; name: string; role: string };
   members: MemberOpt[];
-  businesses: BizOpt[];
+  businesses: PaletteBiz[];
   badge: number;
   today: string;
   workspaceName: string;
@@ -40,6 +42,9 @@ export function Shell({
   const router = useRouter();
   const [lead, setLead] = useState(false);
   const [rem, setRem] = useState(false);
+  const [palette, setPalette] = useState(false);
+  const openLead = useCallback(() => setLead(true), []);
+  const openRem = useCallback(() => setRem(true), []);
 
   // Shortcut: "n" for a new lead when not typing.
   useEffect(() => {
@@ -84,7 +89,16 @@ export function Shell({
       <div className="min-w-0 pb-24 md:pb-0">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-line bg-bg/90 px-4 backdrop-blur sm:px-6">
           <Link href="/today" className="md:hidden" aria-label="Today"><GroveMark size={26} /></Link>
-          <div className="flex-1" />
+          <button
+            type="button"
+            onClick={() => setPalette(true)}
+            className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-line bg-surface px-3 py-1.5 text-left text-sm text-muted hover:text-fg sm:max-w-xs"
+            aria-label="Search or jump (Ctrl K)"
+          >
+            <span className="truncate">Search or jump</span>
+            <kbd className="ml-auto hidden rounded border border-line px-1.5 text-[11px] sm:inline">Ctrl K</kbd>
+          </button>
+          <div className="hidden flex-1 sm:block" />
           <button type="button" className="btn btn-soft btn-sm" onClick={() => setRem(true)}><IconBell /> <span className="hidden sm:inline">Reminder</span></button>
           <button type="button" className="btn btn-primary btn-sm" onClick={() => setLead(true)}><IconPlus /> New lead</button>
           <div className="md:hidden"><ThemeToggle /></div>
@@ -106,6 +120,15 @@ export function Shell({
       <BottomTabs badge={badge} onAdd={() => setLead(true)} />
       <NewLeadDialog open={lead} onClose={() => setLead(false)} members={members} meId={me.id} />
       <ReminderDialog open={rem} onClose={() => setRem(false)} businesses={businesses} today={today} />
+      <CommandPalette
+        open={palette}
+        onOpenChange={setPalette}
+        businesses={businesses}
+        canImport={canImport}
+        onNewLead={openLead}
+        onReminder={openRem}
+        onTheme={toggleTheme}
+      />
     </div>
   );
 }

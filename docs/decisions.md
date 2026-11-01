@@ -76,6 +76,13 @@ The iPhone app comes after the web app. These choices cost little now and a lot 
 - **Created task and activity IDs** are generated in `applyEffects` (UUIDv7) so the undo knows them without a read back.
 - The toast shows Undo for 6 seconds; the token itself is valid for 2 minutes.
 
+## Command palette (2026-11-01)
+
+- **Opens with Ctrl or Cmd K anywhere, or "/" when not typing.** Also a "Search or jump" button in the top bar so it works on touch screens.
+- **Actions**: Add a lead, Set a reminder, Go to Today, Pipeline, Businesses, Tasks, Switch theme, and Import from CSV for owners and managers.
+- **Businesses** search by name, niche and contact using a small fuzzy matcher in `@grove/core` (`search.ts`, tested): prefix, then word start, then initials ("mca" for Mill Creek Auto), then substring, then letters in order. No library. It searches the list the app layout already loads (up to 500), so no extra request per keystroke.
+- **Accessible as an ARIA combobox**: focus stays in the input, results are a listbox announced with `aria-activedescendant`, arrows, Home, End, Enter and Esc all work.
+
 ## Not decided yet
 
 - Offline sync engine for the phone (build simple "changes since" sync first, pick a library only if needed).

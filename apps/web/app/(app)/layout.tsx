@@ -22,7 +22,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Shell
         me={{ id: ctx.userId, name: ctx.name, role: ctx.role }}
         members={members.map((m) => ({ id: m.id, name: m.name, color: m.color, role: m.role }))}
-        businesses={businesses.map((b) => ({ id: b.id, name: b.name }))}
+        businesses={businesses.map((b) => ({ id: b.id, name: b.name, niche: b.niche, contactName: b.contactName }))}
         badge={badge}
         today={ctx.today}
         workspaceName={ctx.workspace.name}
