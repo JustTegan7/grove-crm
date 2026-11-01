@@ -13,6 +13,8 @@ export function Footer() {
             A product from{" "}
             <a href={siteConfig.parentUrl} className="underline">{siteConfig.parent}</a>
           </p>
+          {/* Year comes from the build, so every deploy keeps it current. */}
+          <p className="mt-1 text-xs text-muted">© {new Date().getFullYear()} {siteConfig.parent} All rights reserved.</p>
         </div>
         <nav aria-label="Legal" className="flex gap-4 text-sm text-muted">
           <Link href="/privacy" className="hover:text-fg">Privacy</Link>

@@ -1,5 +1,6 @@
 import { Header } from "../../components/layout/Header";
 import { Footer } from "../../components/layout/Footer";
+import { Analytics } from "@vercel/analytics/next";
 import { softwareSchema } from "../../lib/structured-data";
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
@@ -12,6 +13,8 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       <Header />
       <main id="main-content" className="flex-1">{children}</main>
       <Footer />
+      {/* Vercel Web Analytics: page views only, no cookies. Turn it on in Vercel, Analytics tab. Marketing pages only. */}
+      <Analytics />
     </div>
   );
 }
