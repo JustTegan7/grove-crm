@@ -54,6 +54,20 @@ The iPhone app comes after the web app. These choices cost little now and a lot 
 - **Decide task targets** are found by behavior: Recycle is the parked stage with resurface days, Do Not Contact is the parked stage that clears tasks.
 - Deferred from Lite: undo toasts, command palette, CSV import from Sheets, file uploads (Vercel Blob), dnd-kit (native drag plus a stage menu for now), Playwright suite, auto-sent emails and texts.
 
+## CSV import (2026-11-01)
+
+- **Owners and managers only**, at `/import`. The role check lives in the import service; the nav link is hidden for salespeople.
+- **The file is never stored.** It is parsed in memory on the server with papaparse for each step (analyze, dry run, import). Max 2 MB and 5000 rows. Server action body limit raised to 3 MB for this.
+- **Pure rules live in `packages/core/src/importer.ts`** (header guesses, value parsing, dedupe, starting tasks) with tests. The service loads data, calls core and writes.
+- **Sensitive columns are never read.** Headers that look like financing, credit, SSN, loan, bank or income data default to Skip, cannot be remapped in the UI, and core ignores them even if mapped.
+- **Duplicates**: same digits-only phone (7+ digits, US country code dropped) or same lowercased, trimmed business name, checked against existing contacts and earlier rows in the same file. Duplicates are skipped, never merged.
+- **Created date**: the mapped column if it parses as a day (ISO, M/D/YY(YY), or month names), otherwise today. Future dates clamp to today. Stored as `created_at` at noon UTC so it stays on the same day in US time zones, and as `cadence_started_on`.
+- **Starting tasks reuse the engine.** `onCreate` takes an optional `startedOn` (Day 1). For any stage with cadence behavior `start` (not only the default-new stage, so an old "Reached Out" row is treated the same): if the lead is 14 or more days old it gets one decide task due today with the cadence off; otherwise the cadence starts from the created date with the next step no earlier than today. Every other stage gets the engine's normal entry behavior from today (client check-ins, recycle resurface, DNC clears).
+- **Stage values** in the CSV auto-match a workspace stage by label or key; anything unmatched uses the chosen default stage unless mapped by hand.
+- **Unknown tier values** are kept as a line in notes instead of failing the row. Bad emails, bad launch dates and missing names are row errors.
+- **Writes go in Neon batches of 100** (one transaction each). If a later batch fails, earlier batches stay; running the import again skips them as duplicates.
+- **One "Imported from CSV" system activity** per business.
+
 ## Not decided yet
 
 - Offline sync engine for the phone (build simple "changes since" sync first, pick a library only if needed).

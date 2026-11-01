@@ -1,7 +1,7 @@
 # Grove roadmap
 
-1. **Lite (now)**: Evergreen team uses Grove daily. Sheets keeps billing.
-2. **Polish**: undo on toasts, Ctrl/Cmd K command palette, CSV import from the Google Sheets tracker, file attachments (Vercel Blob), Playwright smoke test.
+1. **Lite (now)**: Evergreen team uses Grove daily. Sheets keeps billing. CSV import from the Sheets tracker is done (2026-11-01).
+2. **Polish**: undo on toasts, Ctrl/Cmd K command palette, file attachments (Vercel Blob), Playwright smoke test.
 3. **Messaging**: template emails that send automatically, AI-personalized drafts, a text review queue.
 4. **Dealership pilot**: dealership stage template, multi-workspace sign-up, Drivonic integration.
 5. **iPhone app**: Expo, QR scan-to-login, push notifications, offline sync.

@@ -11,6 +11,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@grove/core", "@grove/db", "@grove/brand"],
+  // CSV import uploads up to 2 MB through a server action (default limit is 1 MB).
+  experimental: { serverActions: { bodySizeLimit: "3mb" } },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

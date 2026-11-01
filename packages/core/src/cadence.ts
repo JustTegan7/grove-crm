@@ -32,7 +32,7 @@ export function followupTask(step: CadenceStepDef, startedOn: Ymd, today: Ymd, o
   };
 }
 
-function decideTask(today: Ymd, ownerId: string): NewTask {
+export function decideTask(today: Ymd, ownerId: string): NewTask {
   return { kind: "decide", channel: null, title: DECIDE_TITLE, dueDate: today, cadenceStepId: null, ownerId };
 }
 
@@ -40,17 +40,20 @@ function clientTask(today: Ymd, days: number, ownerId: string): NewTask {
   return { kind: "client", channel: null, title: "Client check-in", dueDate: addDays(today, days), cadenceStepId: null, ownerId };
 }
 
-function startCadence(contact: ContactState, steps: CadenceStepDef[], today: Ymd): Effects {
+function startCadence(contact: ContactState, steps: CadenceStepDef[], today: Ymd, startedOn: Ymd = today): Effects {
   const first = sortSteps(steps)[0];
   const fx = empty("Follow-ups scheduled.");
-  fx.contactPatch = { cadenceActive: Boolean(first), cadenceDone: [], cadenceStartedOn: today };
-  if (first) fx.createTasks.push(followupTask(first, today, today, contact.ownerId));
+  fx.contactPatch = { cadenceActive: Boolean(first), cadenceDone: [], cadenceStartedOn: startedOn };
+  if (first) fx.createTasks.push(followupTask(first, startedOn, today, contact.ownerId));
   return fx;
 }
 
-/** A brand-new record. */
-export function onCreate(contact: ContactState, stage: StageDef, steps: CadenceStepDef[], today: Ymd): Effects {
-  if (stage.cadenceBehavior === "start") return startCadence(contact, steps, today);
+/**
+ * A brand-new record. `startedOn` is Day 1 of the cadence, normally today.
+ * Imports pass the lead's original created date; the next step is still never due before today.
+ */
+export function onCreate(contact: ContactState, stage: StageDef, steps: CadenceStepDef[], today: Ymd, startedOn: Ymd = today): Effects {
+  if (stage.cadenceBehavior === "start") return startCadence(contact, steps, today, startedOn);
   const fx = stageEntryEffects(contact, stage, [], today);
   return fx;
 }

@@ -58,6 +58,8 @@ export function Shell({
     router.refresh();
   }
 
+  // Import is for owners and managers. The service checks this again on the server.
+  const canImport = me.role === "owner" || me.role === "manager";
   const color = members.find((m) => m.id === me.id)?.color ?? "#4FB39C";
 
   return (
@@ -65,6 +67,11 @@ export function Shell({
       <aside className="sticky top-0 hidden h-screen flex-col border-r border-line bg-surface p-4 md:flex">
         <Link href="/today" className="mb-6 px-2" aria-label="Today"><GroveLogo /></Link>
         <SideNav badge={badge} />
+        {canImport && (
+          <Link href="/import" className="mt-4 block rounded-lg px-3 py-2 text-xs font-semibold text-muted hover:bg-surface-2 hover:text-fg">
+            Import from CSV
+          </Link>
+        )}
         <div className="mt-auto space-y-2 border-t border-line pt-4">
           <p className="px-2 text-xs text-muted">{workspaceName}</p>
           <div className="flex items-center gap-1">
@@ -88,6 +95,7 @@ export function Shell({
             <div className="card absolute right-0 mt-2 w-48 p-2 shadow-lg">
               <p className="px-2 py-1 text-sm font-semibold">{me.name}</p>
               <p className="px-2 pb-2 text-xs capitalize text-muted">{me.role}</p>
+              {canImport && <Link href="/import" className="btn btn-ghost btn-sm w-full justify-start">Import from CSV</Link>}
               <button type="button" className="btn btn-ghost btn-sm w-full justify-start" onClick={signOut}>Sign out</button>
             </div>
           </details>
