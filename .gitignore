@@ -11,3 +11,7 @@ coverage
 next-env.d.ts
 .DS_Store
 Claude outputs
+
+# Playwright
+/apps/web/test-results/
+/apps/web/playwright-report/
