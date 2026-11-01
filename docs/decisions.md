@@ -68,6 +68,14 @@ The iPhone app comes after the web app. These choices cost little now and a lot 
 - **Writes go in Neon batches of 100** (one transaction each). If a later batch fails, earlier batches stay; running the import again skips them as duplicates.
 - **One "Imported from CSV" system activity** per business.
 
+## Undo on toasts (2026-11-01)
+
+- **Covered actions**: complete a task, snooze, move stage (board and profile), They replied, Recycle or Do not contact, change owner, delete a business. Creating, editing and logging are not undoable (just edit or delete).
+- **How it works**: the service records exactly what it changed (contact fields before, tasks it created, tasks it cancelled, the task it completed or snoozed, task owners, activities it wrote) and returns it as a token signed with HMAC using `BETTER_AUTH_SECRET`. The browser only holds the token. `applyUndo` checks the signature, that it is the same person and workspace, and a 2 minute window, then reverses those exact rows in one Neon batch. Activities and created tasks are soft deleted.
+- **Safety check**: engine writes now set the contact's `updated_at` explicitly. Undo refuses ("This business changed since") if the contact was changed again after the action, so an undo never stomps on newer work.
+- **Created task and activity IDs** are generated in `applyEffects` (UUIDv7) so the undo knows them without a read back.
+- The toast shows Undo for 6 seconds; the token itself is valid for 2 minutes.
+
 ## Not decided yet
 
 - Offline sync engine for the phone (build simple "changes since" sync first, pick a library only if needed).

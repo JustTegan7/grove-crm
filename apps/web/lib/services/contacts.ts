@@ -17,6 +17,7 @@ import { db } from "../db";
 import { requireRole, type Ctx } from "./ctx";
 import { applyEffects, openTasksFor, toState } from "./effects";
 import { loadMembers, loadStages, loadSteps } from "./workspace";
+import { makeUndo, snapshot, undoForEffects } from "./undo";
 
 export class NotFoundError extends Error {}
 
@@ -129,8 +130,8 @@ export async function moveStage(ctx: Ctx, raw: unknown) {
   if (!from || !to) throw new Error("Unknown stage.");
   const fx = onStageChange({ contact: toState(row), from, to, openTasks, steps, today: ctx.today });
   if (from.id === to.id) return { message: "" };
-  await applyEffects(ctx, id, fx);
-  return { message: fx.message };
+  const applied = await applyEffects(ctx, id, fx);
+  return { message: fx.message, undo: undoForEffects(ctx, row, applied, fx.cancelTaskIds) };
 }
 
 export async function markReplied(ctx: Ctx, raw: unknown) {
@@ -138,23 +139,28 @@ export async function markReplied(ctx: Ctx, raw: unknown) {
   const row = await getRow(ctx, id);
   const [stages, steps, openTasks] = await Promise.all([loadStages(ctx.workspace.id), loadSteps(ctx.workspace.id), openTasksFor(ctx, id)]);
   const fx = onReplied({ contact: toState(row), stages, openTasks, steps, today: ctx.today });
-  await applyEffects(ctx, id, fx);
-  return { message: fx.message };
+  const applied = await applyEffects(ctx, id, fx);
+  return { message: fx.message, undo: undoForEffects(ctx, row, applied, fx.cancelTaskIds) };
 }
 
 export async function assignOwner(ctx: Ctx, raw: unknown) {
   const { id, ownerId } = assignOwnerInput.parse(raw);
-  await getRow(ctx, id);
+  const row = await getRow(ctx, id);
   await ensureMember(ctx, ownerId);
+  const open = await db()
+    .select({ id: tasks.id, ownerId: tasks.ownerId })
+    .from(tasks)
+    .where(and(eq(tasks.contactId, id), eq(tasks.workspaceId, ctx.workspace.id), isNull(tasks.doneAt), isNull(tasks.deletedAt)));
+  const at = new Date();
   await db().batch([
-    db().update(contacts).set({ ownerId }).where(and(eq(contacts.id, id), eq(contacts.workspaceId, ctx.workspace.id))),
+    db().update(contacts).set({ ownerId, updatedAt: at }).where(and(eq(contacts.id, id), eq(contacts.workspaceId, ctx.workspace.id))),
     // Open tasks follow the record's owner.
     db()
       .update(tasks)
       .set({ ownerId })
       .where(and(eq(tasks.contactId, id), eq(tasks.workspaceId, ctx.workspace.id), isNull(tasks.doneAt), isNull(tasks.deletedAt))),
   ]);
-  return { message: "Owner updated." };
+  return { message: "Owner updated.", undo: makeUndo(ctx, { contactId: id, before: snapshot(row), after: at.toISOString(), taskOwners: open }) };
 }
 
 export async function logActivity(ctx: Ctx, raw: unknown) {
@@ -170,13 +176,20 @@ export async function logActivity(ctx: Ctx, raw: unknown) {
 export async function deleteContact(ctx: Ctx, raw: unknown) {
   requireRole(ctx, ["owner", "manager"]);
   const { id } = idInput.parse(raw);
-  await getRow(ctx, id);
+  const row = await getRow(ctx, id);
+  const live = await db()
+    .select({ id: tasks.id })
+    .from(tasks)
+    .where(and(eq(tasks.contactId, id), eq(tasks.workspaceId, ctx.workspace.id), isNull(tasks.deletedAt)));
   const now = new Date();
   await db().batch([
-    db().update(contacts).set({ deletedAt: now }).where(and(eq(contacts.id, id), eq(contacts.workspaceId, ctx.workspace.id))),
-    db().update(tasks).set({ deletedAt: now }).where(and(eq(tasks.contactId, id), isNull(tasks.deletedAt))),
+    db().update(contacts).set({ deletedAt: now, updatedAt: now }).where(and(eq(contacts.id, id), eq(contacts.workspaceId, ctx.workspace.id))),
+    db().update(tasks).set({ deletedAt: now }).where(and(eq(tasks.contactId, id), eq(tasks.workspaceId, ctx.workspace.id), isNull(tasks.deletedAt))),
   ]);
-  return { message: "Business deleted." };
+  return {
+    message: "Business deleted.",
+    undo: makeUndo(ctx, { contactId: id, before: snapshot(row), after: now.toISOString(), restoreTaskIds: live.map((t) => t.id) }),
+  };
 }
 
 export async function stageCounts(ctx: Ctx) {

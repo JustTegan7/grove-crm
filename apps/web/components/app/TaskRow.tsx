@@ -29,7 +29,11 @@ export function DuePill({ due, today }: { due: string; today: string }) {
 
 export function TaskRow({ task, today, showBusiness = true }: { task: TaskView; today: string; showBusiness?: boolean }) {
   const { act, pending } = useAct();
-  const [leaving, setLeaving] = useState(false);
+  // The row slides out while completing. Keyed to the task's state so an Undo
+  // (which brings the same task back open) shows it again.
+  const sig = `${task.done}:${task.dueDate}`;
+  const [leavingSig, setLeavingSig] = useState<string | null>(null);
+  const leaving = leavingSig === sig;
   const s = dueState(task.dueDate, today);
 
   return (
@@ -43,7 +47,7 @@ export function TaskRow({ task, today, showBusiness = true }: { task: TaskView; 
           type="button"
           disabled={pending}
           aria-label={`Complete ${task.title}`}
-          onClick={() => { setLeaving(true); act(() => completeTaskAction(task.id)); }}
+          onClick={() => { setLeavingSig(sig); act(() => completeTaskAction(task.id), undefined, () => setLeavingSig(null)); }}
           className="mt-0.5 h-5 w-5 shrink-0 rounded-full border-2 border-primary hover:bg-accent"
         />
       )}

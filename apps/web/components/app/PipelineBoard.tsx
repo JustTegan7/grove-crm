@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useOptimistic, useState, startTransition } from "react";
 import { moveStageAction } from "../../app/(app)/actions";
 import { DuePill } from "./TaskRow";
-import { useToast } from "./Toast";
+import { useResultToast } from "./useAct";
 
 export type BoardStage = { id: string; label: string; color: string; group: "active" | "won" | "parked" };
 export type BoardCard = { id: string; name: string; niche: string | null; stageId: string; owner?: { name: string; color: string }; nextDue: string | null };
@@ -41,7 +41,7 @@ function Card({ card, stages, today, onMove }: { card: BoardCard; stages: BoardS
 }
 
 export function PipelineBoard({ stages, cards, today }: { stages: BoardStage[]; cards: BoardCard[]; today: string }) {
-  const toast = useToast();
+  const show = useResultToast();
   const [optimistic, setOptimistic] = useOptimistic(cards, (state, m: { id: string; stageId: string }) =>
     state.map((c) => (c.id === m.id ? { ...c, stageId: m.stageId } : c)),
   );
@@ -54,8 +54,7 @@ export function PipelineBoard({ stages, cards, today }: { stages: BoardStage[]; 
     startTransition(async () => {
       setOptimistic({ id, stageId });
       const r = await moveStageAction(id, stageId);
-      if (r.ok) toast(r.message);
-      else toast(r.error, "error");
+      show(r);
     });
   }
 

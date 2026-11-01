@@ -5,11 +5,12 @@ import { ZodError } from "zod";
 import { getCtx, type Ctx } from "../../lib/services/ctx";
 import * as contacts from "../../lib/services/contacts";
 import * as tasks from "../../lib/services/tasks";
+import * as undo from "../../lib/services/undo";
 
 // Thin wrappers: build ctx, call a service, refresh the pages.
-export type ActionResult = { ok: true; message: string; id?: string } | { ok: false; error: string };
+export type ActionResult = { ok: true; message: string; id?: string; undo?: string } | { ok: false; error: string };
 
-async function run(fn: (ctx: Ctx) => Promise<{ message: string; id?: string }>): Promise<ActionResult> {
+async function run(fn: (ctx: Ctx) => Promise<{ message: string; id?: string; undo?: string }>): Promise<ActionResult> {
   const ctx = await getCtx();
   try {
     const res = await fn(ctx);
@@ -56,4 +57,7 @@ export async function decideAction(id: string, choice: "recycle" | "dnc") {
 }
 export async function createReminderAction(f: FormData) {
   return run((ctx) => tasks.createReminder(ctx, formObj(f)));
+}
+export async function undoAction(token: string) {
+  return run((ctx) => undo.applyUndo(ctx, token));
 }

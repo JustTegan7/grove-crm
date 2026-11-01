@@ -7,6 +7,7 @@ import { db } from "../db";
 import type { Ctx } from "./ctx";
 import { applyEffects, openTasksFor, toState } from "./effects";
 import { loadStages, loadSteps } from "./workspace";
+import { makeUndo, undoForEffects } from "./undo";
 
 const taskCols = {
   id: tasks.id,
@@ -92,7 +93,7 @@ export async function completeTask(ctx: Ctx, raw: unknown) {
 
   if (!t.contactId) {
     await done;
-    return { message: "Done." };
+    return { message: "Done.", undo: makeUndo(ctx, { reopenTaskId: id }) };
   }
   const [c] = await db().select().from(contacts).where(and(eq(contacts.id, t.contactId), eq(contacts.workspaceId, ctx.workspace.id)));
   const [stages, steps] = await Promise.all([loadStages(ctx.workspace.id), loadSteps(ctx.workspace.id)]);
@@ -104,15 +105,15 @@ export async function completeTask(ctx: Ctx, raw: unknown) {
     today: ctx.today,
   });
   fx.activities.unshift({ type: "system", body: `Completed: ${t.title}` });
-  await applyEffects(ctx, c.id, fx, [done as never]);
-  return { message: fx.message };
+  const applied = await applyEffects(ctx, c.id, fx, [done as never]);
+  return { message: fx.message, undo: undoForEffects(ctx, c, applied, fx.cancelTaskIds, { reopenTaskId: id }) };
 }
 
 export async function snoozeTask(ctx: Ctx, raw: unknown) {
   const { id } = idInput.parse(raw);
-  await getTask(ctx, id);
-  await db().update(tasks).set({ dueDate: snoozeDate(ctx.today) }).where(eq(tasks.id, id));
-  return { message: "Moved to tomorrow." };
+  const t = await getTask(ctx, id);
+  await db().update(tasks).set({ dueDate: snoozeDate(ctx.today) }).where(and(eq(tasks.id, id), eq(tasks.workspaceId, ctx.workspace.id)));
+  return { message: "Moved to tomorrow.", undo: makeUndo(ctx, { taskDue: { id, dueDate: t.dueDate } }) };
 }
 
 export async function createReminder(ctx: Ctx, raw: unknown) {
@@ -155,6 +156,7 @@ export async function decide(ctx: Ctx, raw: unknown) {
   if (!to || !from) throw new Error("This workspace has no stage for that.");
   const fx = onStageChange({ contact: toState(c), from, to, openTasks, steps, today: ctx.today });
   const done = db().update(tasks).set({ doneAt: new Date() }).where(eq(tasks.id, id));
-  await applyEffects(ctx, c.id, { ...fx, cancelTaskIds: fx.cancelTaskIds.filter((x) => x !== id) }, [done as never]);
-  return { message: fx.message };
+  const cancelled = fx.cancelTaskIds.filter((x) => x !== id);
+  const applied = await applyEffects(ctx, c.id, { ...fx, cancelTaskIds: cancelled }, [done as never]);
+  return { message: fx.message, undo: undoForEffects(ctx, c, applied, cancelled, { reopenTaskId: id }) };
 }
