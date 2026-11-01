@@ -91,6 +91,14 @@ The iPhone app comes after the web app. These choices cost little now and a lot 
 - **Removing a file deletes the bytes for real** and soft deletes the row, with an activity line. It is not undoable on purpose.
 - New table `contact_files` (migration 0001), applied automatically on the next Vercel deploy.
 
+## Lite fine-tuning (2026-11-01)
+
+- **Edit tasks**: any open task (not decide tasks) can move to a specific day (today or later) and get a note. Only reminders people set themselves can be renamed or deleted; follow-ups, check-ins and resurface tasks come from the cadence, so they are snoozed or moved, not deleted. Edits and deletes are undoable.
+- **Duplicate warning on New lead**: before saving, Grove checks for the same name (lowercased, trimmed, spaces collapsed) or the same phone (last 10 digits). If found, it lists them with links and the button becomes "Add anyway". It warns, never blocks.
+- **Team page** (`/team`, owners and managers): members, and the homepage waitlist signups (newest first, mailto links).
+- **Password reset**: Better Auth reset flow with a one hour, single use link, signing the person out everywhere after a reset. Emails go through Resend's HTTP API when `RESEND_API_KEY` and `EMAIL_FROM` are set; until then the request quietly does nothing and the page says to ask an owner. The forgot form gives the same answer for any email so accounts cannot be probed.
+- **Owner fallback**: owners can set a temporary password for a teammate on the Team page (hashed with Better Auth's own hasher, signs them out everywhere). Works without email.
+
 ## Not decided yet
 
 - Offline sync engine for the phone (build simple "changes since" sync first, pick a library only if needed).

@@ -7,6 +7,7 @@ import { schema } from "@grove/db";
 import { db } from "./db";
 import { teamAllowlist } from "./team";
 import { joinDefaultWorkspace } from "./services/workspace";
+import { sendEmail } from "./email";
 
 // Lazily built so `next build` works before env vars exist.
 function createAuth() {
@@ -26,7 +27,20 @@ function createAuth() {
       provider: "pg",
       schema: { user: schema.user, session: schema.session, account: schema.account, verification: schema.verification },
     }),
-    emailAndPassword: { enabled: true, minPasswordLength: 10 },
+    emailAndPassword: {
+      enabled: true,
+      minPasswordLength: 10,
+      // Reset links last an hour and sign the person out everywhere once used.
+      resetPasswordTokenExpiresIn: 60 * 60,
+      revokeSessionsOnPasswordReset: true,
+      sendResetPassword: async ({ user, url }) => {
+        await sendEmail({
+          to: user.email,
+          subject: "Reset your Grove password",
+          text: `Hi ${user.name},\n\nUse this link to set a new Grove password. It works for one hour.\n\n${url}\n\nIf you did not ask for this, you can ignore this email.\n\nGrove`,
+        });
+      },
+    },
     rateLimit: { enabled: true, window: 60, max: 30 },
     databaseHooks: {
       user: {

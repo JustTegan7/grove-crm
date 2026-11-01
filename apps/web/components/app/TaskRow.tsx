@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { dueLabel, dueState } from "@grove/core";
-import { completeTaskAction, decideAction, snoozeTaskAction } from "../../app/(app)/actions";
+import { completeTaskAction, decideAction, deleteTaskAction, snoozeTaskAction, updateTaskAction } from "../../app/(app)/actions";
 import { ChannelIcon } from "./Icons";
 import { useAct } from "./useAct";
 
@@ -34,6 +34,7 @@ export function TaskRow({ task, today, showBusiness = true }: { task: TaskView; 
   const sig = `${task.done}:${task.dueDate}`;
   const [leavingSig, setLeavingSig] = useState<string | null>(null);
   const leaving = leavingSig === sig;
+  const [editing, setEditing] = useState(false);
   const s = dueState(task.dueDate, today);
 
   return (
@@ -61,6 +62,35 @@ export function TaskRow({ task, today, showBusiness = true }: { task: TaskView; 
           <Link href={`/businesses/${task.contactId}`} className="text-sm text-muted hover:text-fg hover:underline">{task.contactName}</Link>
         )}
         {task.note && <p className="mt-1 text-xs text-muted">{task.note}</p>}
+        {editing && !task.done && (
+          <form
+            className="mt-3 space-y-2 rounded-lg bg-surface-2 p-3"
+            action={(f) => act(() => updateTaskAction(f), () => setEditing(false))}
+          >
+            <input type="hidden" name="id" value={task.id} />
+            {task.kind === "manual" && (
+              <div>
+                <label className="label" htmlFor={`tt-${task.id}`}>What</label>
+                <input id={`tt-${task.id}`} name="title" className="input" defaultValue={task.title} required maxLength={200} />
+              </div>
+            )}
+            <div>
+              <label className="label" htmlFor={`td-${task.id}`}>Day</label>
+              <input id={`td-${task.id}`} name="dueDate" type="date" className="input" min={today} defaultValue={task.dueDate < today ? today : task.dueDate} required />
+            </div>
+            <div>
+              <label className="label" htmlFor={`tn-${task.id}`}>Note</label>
+              <textarea id={`tn-${task.id}`} name="note" className="input" rows={2} defaultValue={task.note ?? ""} maxLength={1000} />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button className="btn btn-primary btn-sm" disabled={pending}>Save</button>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditing(false)}>Cancel</button>
+              {task.kind === "manual" && (
+                <button type="button" className="btn btn-danger btn-sm ml-auto" disabled={pending} onClick={() => act(() => deleteTaskAction(task.id))}>Delete reminder</button>
+              )}
+            </div>
+          </form>
+        )}
         {task.kind === "decide" && !task.done && (
           <div className="mt-2 flex gap-2">
             <button type="button" className="btn btn-soft btn-sm" disabled={pending} onClick={() => act(() => decideAction(task.id, "recycle"))}>Recycle</button>
@@ -76,6 +106,9 @@ export function TaskRow({ task, today, showBusiness = true }: { task: TaskView; 
         )}
         {!task.done && task.channel === "call" && task.contactPhone && (
           <a href={`tel:${task.contactPhone}`} className="btn btn-ghost btn-sm">Call</a>
+        )}
+        {!task.done && task.kind !== "decide" && (
+          <button type="button" className="btn btn-ghost btn-sm" aria-expanded={editing} aria-label={`Edit ${task.title}`} onClick={() => setEditing((v) => !v)}>Edit</button>
         )}
         {!task.done && task.kind !== "decide" && (s === "overdue" || s === "today") && (
           <button type="button" className="btn btn-ghost btn-sm" disabled={pending} onClick={() => act(() => snoozeTaskAction(task.id))}>Tomorrow</button>

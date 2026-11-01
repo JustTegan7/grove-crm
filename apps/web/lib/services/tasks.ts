@@ -1,7 +1,7 @@
 import "server-only";
 import { and, asc, desc, eq, gte, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import { contacts, tasks } from "@grove/db";
-import { addDays, createReminderInput, idInput, onComplete, onStageChange, snoozeDate } from "@grove/core";
+import { addDays, createReminderInput, idInput, onComplete, onStageChange, snoozeDate, updateTaskInput } from "@grove/core";
 import { z } from "zod";
 import { db } from "../db";
 import type { Ctx } from "./ctx";
@@ -159,4 +159,27 @@ export async function decide(ctx: Ctx, raw: unknown) {
   const cancelled = fx.cancelTaskIds.filter((x) => x !== id);
   const applied = await applyEffects(ctx, c.id, { ...fx, cancelTaskIds: cancelled }, [done as never]);
   return { message: fx.message, undo: undoForEffects(ctx, c, applied, cancelled, { reopenTaskId: id }) };
+}
+
+/** Change a task's day and note. Only reminders you set yourself can be renamed. */
+export async function updateTask(ctx: Ctx, raw: unknown) {
+  const input = updateTaskInput.parse(raw);
+  const t = await getTask(ctx, input.id);
+  if (t.doneAt) throw new Error("That task is already done.");
+  if (input.dueDate < ctx.today) throw new Error("Pick today or a later day.");
+  const title = t.kind === "manual" && input.title ? input.title : t.title;
+  await db()
+    .update(tasks)
+    .set({ dueDate: input.dueDate, note: input.note, title })
+    .where(and(eq(tasks.id, t.id), eq(tasks.workspaceId, ctx.workspace.id)));
+  return { message: "Task updated.", undo: makeUndo(ctx, { taskEdit: { id: t.id, title: t.title, note: t.note, dueDate: t.dueDate } }) };
+}
+
+/** Delete a reminder you set. Follow-ups, check-ins and decide tasks come from the cadence and cannot be deleted. */
+export async function deleteTask(ctx: Ctx, raw: unknown) {
+  const { id } = idInput.parse(raw);
+  const t = await getTask(ctx, id);
+  if (t.kind !== "manual") throw new Error("Only reminders can be deleted. Snooze or move the business instead.");
+  await db().update(tasks).set({ deletedAt: new Date() }).where(and(eq(tasks.id, id), eq(tasks.workspaceId, ctx.workspace.id)));
+  return { message: "Reminder deleted.", undo: makeUndo(ctx, { restoreTaskIds: [id] }) };
 }

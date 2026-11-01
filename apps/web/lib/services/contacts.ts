@@ -7,12 +7,15 @@ import {
   idInput,
   logActivityInput,
   moveStageInput,
+  normalizeName,
+  normalizePhone,
   onCreate,
   onReplied,
   onStageChange,
   updateContactInput,
   type CreateContactInput,
 } from "@grove/core";
+import { z } from "zod";
 import { db } from "../db";
 import { requireRole, type Ctx } from "./ctx";
 import { applyEffects, openTasksFor, toState } from "./effects";
@@ -198,4 +201,21 @@ export async function stageCounts(ctx: Ctx) {
     .from(contacts)
     .where(and(eq(contacts.workspaceId, ctx.workspace.id), isNull(contacts.deletedAt)))
     .groupBy(contacts.stageId);
+}
+
+/** Businesses that look like the one about to be added: same name, or same phone digits. */
+export async function findDuplicates(ctx: Ctx, raw: unknown) {
+  const input = z.object({ name: z.string().max(200).default(""), phone: z.string().max(40).default("") }).parse(raw);
+  const name = normalizeName(input.name);
+  const phone = normalizePhone(input.phone);
+  const conds = [];
+  if (name) conds.push(sql`regexp_replace(lower(trim(${contacts.name})), '\s+', ' ', 'g') = ${name}`);
+  if (phone.length >= 7) conds.push(sql`right(regexp_replace(coalesce(${contacts.phone}, ''), '\D', '', 'g'), 10) = right(${phone}, 10)`);
+  if (!conds.length) return [];
+  const rows = await db()
+    .select({ id: contacts.id, name: contacts.name, phone: contacts.phone })
+    .from(contacts)
+    .where(and(eq(contacts.workspaceId, ctx.workspace.id), isNull(contacts.deletedAt), or(...conds)))
+    .limit(5);
+  return rows.map((r) => ({ id: r.id, name: r.name, reason: normalizeName(r.name) === name ? "same name" : "same phone" }));
 }

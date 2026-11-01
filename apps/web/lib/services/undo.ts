@@ -38,6 +38,7 @@ const plan = z.object({
   restoreTaskIds: z.array(z.string().uuid()).default([]),
   reopenTaskId: z.string().uuid().optional(),
   taskDue: z.object({ id: z.string().uuid(), dueDate: z.string() }).optional(),
+  taskEdit: z.object({ id: z.string().uuid(), title: z.string(), note: z.string().nullable(), dueDate: z.string() }).optional(),
   taskOwners: z.array(z.object({ id: z.string().uuid(), ownerId: z.string() })).default([]),
   activityIds: z.array(z.string().uuid()).default([]),
 });
@@ -148,6 +149,10 @@ export async function applyUndo(ctx: Ctx, token: unknown) {
         .set({ dueDate: p.taskDue.dueDate })
         .where(and(eq(tasks.workspaceId, ws), eq(tasks.id, p.taskDue.id), isNull(tasks.doneAt))),
     );
+  }
+  if (p.taskEdit) {
+    const e = p.taskEdit;
+    queries.push(d.update(tasks).set({ title: e.title, note: e.note, dueDate: e.dueDate }).where(and(eq(tasks.workspaceId, ws), eq(tasks.id, e.id))));
   }
   for (const t of p.taskOwners) {
     queries.push(d.update(tasks).set({ ownerId: t.ownerId }).where(and(eq(tasks.workspaceId, ws), eq(tasks.id, t.id))));

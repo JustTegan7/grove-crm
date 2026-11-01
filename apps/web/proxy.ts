@@ -4,7 +4,7 @@ import { getSessionCookie } from "better-auth/cookies";
 // Exact-match public routes. Everything else needs a session cookie.
 // (The cookie check is a fast first gate; every page and service also
 // checks the real session on the server.)
-const PUBLIC = new Set(["/", "/login", "/privacy", "/terms", "/robots.txt", "/sitemap.xml"]);
+const PUBLIC = new Set(["/", "/login", "/reset-password", "/privacy", "/terms", "/robots.txt", "/sitemap.xml"]);
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

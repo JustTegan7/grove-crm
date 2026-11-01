@@ -71,3 +71,10 @@ export const logActivityInput = z.object({
   type: z.enum(["call", "text", "email", "note"]),
   body: z.string().trim().min(1).max(5000),
 });
+
+export const updateTaskInput = z.object({
+  id: z.string().uuid(),
+  dueDate: ymd,
+  title: z.string().trim().min(1, "Give it a title").max(200).optional(),
+  note: optText(1000),
+});

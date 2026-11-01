@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createContactAction, createReminderAction } from "../../app/(app)/actions";
+import { createContactAction, createReminderAction, findDuplicatesAction } from "../../app/(app)/actions";
 import { useAct } from "./useAct";
 
 export type MemberOpt = { id: string; name: string; color: string; role: string };
@@ -31,18 +32,36 @@ export function NewLeadDialog({ open, onClose, members, meId }: { open: boolean;
   const { act, pending } = useAct();
   const router = useRouter();
   const [more, setMore] = useState(false);
+  // null = not checked yet. A non-empty list means we warned once; the next submit adds anyway.
+  const [dups, setDups] = useState<{ id: string; name: string; reason: string }[] | null>(null);
+  const [checking, startCheck] = useTransition();
+
+  function create(f: FormData) {
+    act(() => createContactAction(f), (r) => {
+      onClose();
+      setMore(false);
+      setDups(null);
+      if (r.id) router.push(`/businesses/${r.id}`);
+    });
+  }
+
+  function submit(f: FormData) {
+    if (dups && dups.length) return create(f);
+    startCheck(async () => {
+      const found = await findDuplicatesAction(String(f.get("name") ?? ""), String(f.get("phone") ?? ""));
+      if (found.length) setDups(found);
+      else create(f);
+    });
+  }
+
+  function close() {
+    setDups(null);
+    onClose();
+  }
+
   return (
-    <Modal open={open} onClose={onClose} title="New lead">
-      <form
-        className="space-y-4"
-        action={(f) =>
-          act(() => createContactAction(f), (r) => {
-            onClose();
-            setMore(false);
-            if (r.id) router.push(`/businesses/${r.id}`);
-          })
-        }
-      >
+    <Modal open={open} onClose={close} title="New lead">
+      <form className="space-y-4" action={submit} onChange={(e) => { const n = (e.target as unknown as HTMLInputElement).name; if (n === "name" || n === "phone") setDups(null); }}>
         <div>
           <label className="label" htmlFor="nl-name">Business name</label>
           <input id="nl-name" name="name" className="input" required autoFocus />
@@ -70,10 +89,26 @@ export function NewLeadDialog({ open, onClose, members, meId }: { open: boolean;
             <div className="sm:col-span-2"><label className="label" htmlFor="nl-web">Website, Yelp or Facebook</label><input id="nl-web" name="website" className="input" /></div>
           </div>
         )}
+        {dups && dups.length > 0 && (
+          <div role="alert" className="rounded-lg border border-today/40 bg-today/10 p-3 text-sm">
+            <p className="font-semibold">This might already be in Grove:</p>
+            <ul className="mt-1 space-y-1">
+              {dups.map((d) => (
+                <li key={d.id}>
+                  <Link href={`/businesses/${d.id}`} onClick={close} className="font-semibold underline">{d.name}</Link>
+                  <span className="text-muted"> ({d.reason})</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-1 text-muted">Open it instead, or press Add anyway.</p>
+          </div>
+        )}
         <p className="text-xs text-muted">Grove schedules the Day 1, 3, 5, 10 and 14 follow-ups for you.</p>
         <div className="flex justify-end gap-2">
-          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" disabled={pending}>{pending ? "Adding..." : "Add lead"}</button>
+          <button type="button" className="btn btn-ghost" onClick={close}>Cancel</button>
+          <button className="btn btn-primary" disabled={pending || checking}>
+            {pending || checking ? "Adding..." : dups && dups.length ? "Add anyway" : "Add lead"}
+          </button>
         </div>
       </form>
     </Modal>

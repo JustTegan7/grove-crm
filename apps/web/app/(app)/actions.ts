@@ -7,6 +7,7 @@ import * as contacts from "../../lib/services/contacts";
 import * as tasks from "../../lib/services/tasks";
 import * as undo from "../../lib/services/undo";
 import * as files from "../../lib/services/files";
+import * as team from "../../lib/services/team";
 
 // Thin wrappers: build ctx, call a service, refresh the pages.
 export type ActionResult = { ok: true; message: string; id?: string; undo?: string } | { ok: false; error: string };
@@ -67,4 +68,21 @@ export async function uploadFileAction(f: FormData) {
 }
 export async function deleteFileAction(id: string) {
   return run((ctx) => files.deleteFile(ctx, { id }));
+}
+export async function updateTaskAction(f: FormData) {
+  return run((ctx) => tasks.updateTask(ctx, formObj(f)));
+}
+export async function deleteTaskAction(id: string) {
+  return run((ctx) => tasks.deleteTask(ctx, { id }));
+}
+export async function findDuplicatesAction(name: string, phone: string) {
+  const ctx = await getCtx();
+  try {
+    return await contacts.findDuplicates(ctx, { name, phone });
+  } catch {
+    return [];
+  }
+}
+export async function setTemporaryPasswordAction(f: FormData) {
+  return run((ctx) => team.setTemporaryPassword(ctx, formObj(f)));
 }

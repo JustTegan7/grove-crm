@@ -77,7 +77,12 @@ export function CommandPalette({
       { id: "a-biz", section: "Actions", label: "Go to Businesses", run: go("/businesses") },
       { id: "a-tasks", section: "Actions", label: "Go to Tasks", run: go("/tasks") },
       { id: "a-theme", section: "Actions", label: "Switch theme", run: onTheme },
-      ...(canImport ? [{ id: "a-import", section: "Actions" as const, label: "Import from CSV", run: go("/import") }] : []),
+      ...(canImport
+        ? [
+            { id: "a-import", section: "Actions" as const, label: "Import from CSV", run: go("/import") },
+            { id: "a-team", section: "Actions" as const, label: "Team and waitlist", run: go("/team") },
+          ]
+        : []),
     ];
     const acts = fuzzyFilter(q, actions, (a) => [a.label], q ? 5 : actions.length);
     const biz = q
