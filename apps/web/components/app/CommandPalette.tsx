@@ -80,6 +80,7 @@ export function CommandPalette({
       ...(canImport
         ? [
             { id: "a-import", section: "Actions" as const, label: "Import from CSV", run: go("/import") },
+            { id: "a-templates", section: "Actions" as const, label: "Message templates", run: go("/templates") },
             { id: "a-team", section: "Actions" as const, label: "Team and waitlist", run: go("/team") },
           ]
         : []),

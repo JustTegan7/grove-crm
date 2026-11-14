@@ -5,6 +5,7 @@ import { getCtx } from "../../../lib/services/ctx";
 import { listOpenTasks } from "../../../lib/services/tasks";
 import { stageCounts } from "../../../lib/services/contacts";
 import { loadMembers, loadStages } from "../../../lib/services/workspace";
+import { listMessageTemplates } from "../../../lib/services/messages";
 import { toTaskView } from "../../../lib/views";
 import { TaskRow } from "../../../components/app/TaskRow";
 
@@ -19,13 +20,15 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
   const ctx = await getCtx();
   const { who } = await searchParams;
   const mine = who !== "all";
-  const [open, members, stages, counts] = await Promise.all([
+  const [open, members, stages, counts, templates] = await Promise.all([
     listOpenTasks(ctx, { mine, until: addDays(ctx.today, 7) }),
     loadMembers(ctx.workspace.id),
     loadStages(ctx.workspace.id),
     stageCounts(ctx),
+    listMessageTemplates(ctx),
   ]);
-  const views = open.map((t) => toTaskView(t, members));
+  const source = { templates, company: ctx.workspace.name, sender: ctx.name };
+  const views = open.map((t) => toTaskView(t, members, source));
   const overdue = views.filter((t) => t.dueDate < ctx.today);
   const dueToday = views.filter((t) => t.dueDate === ctx.today);
   const soon = views.filter((t) => t.dueDate > ctx.today);

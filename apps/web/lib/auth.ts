@@ -6,7 +6,7 @@ import { nextCookies } from "better-auth/next-js";
 import { schema } from "@grove/db";
 import { db } from "./db";
 import { teamAllowlist } from "./team";
-import { joinDefaultWorkspace } from "./services/workspace";
+import { acceptInvites, hasPendingInvite, joinDefaultWorkspace, openSignupEnabled } from "./services/workspace";
 import { sendEmail } from "./email";
 
 // Lazily built so `next build` works before env vars exist.
@@ -46,14 +46,18 @@ function createAuth() {
       user: {
         create: {
           before: async (u) => {
-            // Sign-up is open only to emails on the GROVE_TEAM list.
-            if (!teamAllowlist().has(u.email.toLowerCase())) {
+            // Sign-up needs one of: the Evergreen team list, a pending invite, or open sign-up turned on.
+            const email = u.email.toLowerCase();
+            if (!teamAllowlist().has(email) && !openSignupEnabled() && !(await hasPendingInvite(email))) {
               throw new APIError("FORBIDDEN", { message: "This email is not on the Grove team list." });
             }
             return { data: u };
           },
           after: async (u) => {
-            await joinDefaultWorkspace(u.id, u.email);
+            // Evergreen team list joins the Evergreen workspace. Invited people join the workspace that invited them.
+            // Everyone else lands on /start to create their own workspace.
+            if (teamAllowlist().has(u.email.toLowerCase())) await joinDefaultWorkspace(u.id, u.email);
+            await acceptInvites(u.id, u.email);
           },
         },
       },

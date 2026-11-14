@@ -6,6 +6,7 @@ import { dueLabel, dueState } from "@grove/core";
 import { completeTaskAction, decideAction, deleteTaskAction, snoozeTaskAction, updateTaskAction } from "../../app/(app)/actions";
 import { ChannelIcon } from "./Icons";
 import { useAct } from "./useAct";
+import { useToast } from "./Toast";
 
 export type TaskView = {
   id: string;
@@ -19,6 +20,8 @@ export type TaskView = {
   contactName: string | null;
   contactPhone: string | null;
   owner?: { name: string; color: string };
+  /** The workspace template for this follow-up, already filled in for this business. */
+  message?: { subject: string | null; body: string };
 };
 
 export function DuePill({ due, today }: { due: string; today: string }) {
@@ -29,6 +32,7 @@ export function DuePill({ due, today }: { due: string; today: string }) {
 
 export function TaskRow({ task, today, showBusiness = true }: { task: TaskView; today: string; showBusiness?: boolean }) {
   const { act, pending } = useAct();
+  const toast = useToast();
   // The row slides out while completing. Keyed to the task's state so an Undo
   // (which brings the same task back open) shows it again.
   const sig = `${task.done}:${task.dueDate}`;
@@ -103,6 +107,23 @@ export function TaskRow({ task, today, showBusiness = true }: { task: TaskView; 
           <span title={task.owner.name} className="flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold text-white" style={{ background: task.owner.color }}>
             {task.owner.name.slice(0, 1)}
           </span>
+        )}
+        {!task.done && task.message && (
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={async () => {
+              const m = task.message!;
+              try {
+                await navigator.clipboard.writeText(m.subject ? `Subject: ${m.subject}\n\n${m.body}` : m.body);
+                toast(task.channel === "call" ? "Script copied." : "Message copied.");
+              } catch {
+                toast("Could not copy. Select the text and copy it by hand.", "error");
+              }
+            }}
+          >
+            {task.channel === "call" ? "Copy script" : "Copy message"}
+          </button>
         )}
         {!task.done && task.channel === "call" && task.contactPhone && (
           <a href={`tel:${task.contactPhone}`} className="btn btn-ghost btn-sm">Call</a>

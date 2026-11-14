@@ -244,3 +244,36 @@ export const waitlistSignups = pgTable("waitlist_signups", {
   email: text("email").notNull().unique(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Message templates a business edits for its own follow-ups. Merge fields look like {{business}}.
+export const messageTemplates = pgTable(
+  "message_templates",
+  {
+    id: id(),
+    workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    channel: channel("channel").notNull(),
+    // The cadence day this message is used for. Null means any day on that channel.
+    day: integer("day"),
+    subject: text("subject"),
+    body: text("body").notNull(),
+    createdBy: text("created_by").references(() => user.id),
+    ...stamps,
+  },
+  (t) => [index("message_templates_ws").on(t.workspaceId, t.channel)],
+);
+
+// An owner invites a teammate by email. When that email signs up, they join with this role.
+export const invites = pgTable(
+  "invites",
+  {
+    id: id(),
+    workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    role: role("role").notNull().default("salesperson"),
+    invitedBy: text("invited_by").references(() => user.id),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    ...stamps,
+  },
+  (t) => [uniqueIndex("invites_ws_email").on(t.workspaceId, t.email), index("invites_email").on(t.email)],
+);

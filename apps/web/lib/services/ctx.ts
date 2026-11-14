@@ -8,7 +8,7 @@ import { todayIn, type Role } from "@grove/core";
 import { auth } from "../auth";
 import { db } from "../db";
 import { teamAllowlist } from "../team";
-import { joinDefaultWorkspace } from "./workspace";
+import { acceptInvites, joinDefaultWorkspace, openSignupEnabled } from "./workspace";
 
 export interface Ctx {
   userId: string;
@@ -22,7 +22,7 @@ export interface Ctx {
 
 export class ForbiddenError extends Error {}
 
-async function loadCtx(): Promise<Ctx | null> {
+async function loadCtx(): Promise<Ctx | "no-workspace" | null> {
   const h = await headers();
   const session = await auth().api.getSession({ headers: h });
   if (!session) return null;
@@ -43,7 +43,11 @@ async function loadCtx(): Promise<Ctx | null> {
     await joinDefaultWorkspace(u.id, u.email);
     [m] = await find();
   }
-  if (!m) return null;
+  if (!m) {
+    // Invited people join the workspace that invited them.
+    if (await acceptInvites(u.id, u.email)) [m] = await find();
+  }
+  if (!m) return openSignupEnabled() ? "no-workspace" : null;
 
   const tz = m.tz ?? m.ws.timezone;
   return {
@@ -59,6 +63,7 @@ async function loadCtx(): Promise<Ctx | null> {
 /** The signed-in member, or a redirect to /login. Cached per request. */
 export const getCtx = cache(async (): Promise<Ctx> => {
   const ctx = await loadCtx();
+  if (ctx === "no-workspace") redirect("/start");
   if (!ctx) redirect("/login");
   return ctx;
 });
