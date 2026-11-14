@@ -22,6 +22,13 @@
       "when": 1794677490692,
       "tag": "0002_broad_wolf_cub",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794678586625,
+      "tag": "0003_colorful_agent_brand",
+      "breakpoints": true
     }
   ]
 }

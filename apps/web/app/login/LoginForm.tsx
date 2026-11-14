@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "../../lib/auth-client";
+import { QrLogin } from "./QrLogin";
 
 export function LoginForm({ next, startForgot = false, justReset = false }: { next: string; startForgot?: boolean; justReset?: boolean }) {
   const router = useRouter();
-  const [mode, setMode] = useState<"in" | "up" | "forgot">(startForgot ? "forgot" : "in");
+  const [mode, setMode] = useState<"in" | "up" | "forgot" | "qr">(startForgot ? "forgot" : "in");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -40,12 +41,14 @@ export function LoginForm({ next, startForgot = false, justReset = false }: { ne
 
   return (
     <div className="card w-full max-w-sm p-6">
-      <h1 className="text-2xl font-bold">{mode === "in" ? "Welcome back" : mode === "up" ? "Create your login" : "Forgot your password?"}</h1>
+      <h1 className="text-2xl font-bold">{mode === "in" ? "Welcome back" : mode === "up" ? "Create your login" : mode === "qr" ? "Log in with your phone" : "Forgot your password?"}</h1>
       <p className="mt-1 text-sm text-muted">
-        {mode === "in" ? "Log in to your grove." : mode === "up" ? "Use the email you were invited with." : "We will email you a link to set a new one."}
+        {mode === "in" ? "Log in to your grove." : mode === "up" ? "Use the email you were invited with." : mode === "qr" ? "No password needed." : "We will email you a link to set a new one."}
       </p>
       {justReset && mode === "in" && <p className="mt-3 rounded-lg bg-surface-2 p-3 text-sm font-semibold">Password saved. Log in with your new password.</p>}
-      {mode === "forgot" && sent ? (
+      {mode === "qr" ? (
+        <QrLogin next={next} />
+      ) : mode === "forgot" && sent ? (
         <div className="mt-6 space-y-3 text-sm">
           <p className="rounded-lg bg-surface-2 p-3">If that email has a Grove login, a reset link is on its way. It works for one hour.</p>
           <p className="text-muted">Nothing after a few minutes? Check spam, or ask an owner to set a temporary password for you from the Team page.</p>
@@ -82,6 +85,16 @@ export function LoginForm({ next, startForgot = false, justReset = false }: { ne
           {pending ? "One sec..." : mode === "in" ? "Log in" : mode === "up" ? "Create login" : "Send reset link"}
         </button>
       </form>
+      )}
+      {mode === "in" && (
+        <button type="button" className="mt-4 w-full text-center text-sm text-muted underline" onClick={() => setMode("qr")}>
+          Log in with your phone
+        </button>
+      )}
+      {mode === "qr" && (
+        <button type="button" className="mt-4 w-full text-center text-sm text-muted underline" onClick={() => setMode("in")}>
+          Use email and password
+        </button>
       )}
       {mode === "in" && (
         <button type="button" className="mt-4 w-full text-center text-sm text-muted underline" onClick={() => { setMode("forgot"); setSent(false); setError(null); }}>

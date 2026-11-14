@@ -277,3 +277,20 @@ export const invites = pgTable(
   },
   (t) => [uniqueIndex("invites_ws_email").on(t.workspaceId, t.email), index("invites_email").on(t.email)],
 );
+
+// Log in on the web by scanning a QR code with the phone app. Only hashes of the code and the
+// poll secret are stored. The one-time token is cleared the moment the web browser collects it.
+export const qrLogins = pgTable(
+  "qr_logins",
+  {
+    id: id(),
+    codeHash: text("code_hash").notNull().unique(),
+    pollHash: text("poll_hash").notNull(),
+    status: text("status", { enum: ["pending", "approved", "used"] }).notNull().default("pending"),
+    userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
+    oneTimeToken: text("one_time_token"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("qr_logins_expires").on(t.expiresAt)],
+);

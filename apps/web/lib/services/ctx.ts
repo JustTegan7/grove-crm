@@ -22,8 +22,7 @@ export interface Ctx {
 
 export class ForbiddenError extends Error {}
 
-async function loadCtx(): Promise<Ctx | "no-workspace" | null> {
-  const h = await headers();
+async function loadCtx(h: Headers): Promise<Ctx | "no-workspace" | null> {
   const session = await auth().api.getSession({ headers: h });
   if (!session) return null;
   const u = session.user;
@@ -62,7 +61,7 @@ async function loadCtx(): Promise<Ctx | "no-workspace" | null> {
 
 /** The signed-in member, or a redirect to /login. Cached per request. */
 export const getCtx = cache(async (): Promise<Ctx> => {
-  const ctx = await loadCtx();
+  const ctx = await loadCtx(await headers());
   if (ctx === "no-workspace") redirect("/start");
   if (!ctx) redirect("/login");
   return ctx;
@@ -76,4 +75,10 @@ export function requireRole(ctx: Ctx, roles: Role[]) {
 export function canSeeAll(ctx: Ctx) {
   void ctx;
   return true;
+}
+
+/** For /api/v1: the signed-in member from a bearer token or cookie. Null means respond 401. */
+export async function getApiCtx(request: Request): Promise<Ctx | null> {
+  const ctx = await loadCtx(request.headers);
+  return ctx === "no-workspace" ? null : ctx;
 }
