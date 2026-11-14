@@ -3,20 +3,19 @@ import { ZodError } from "zod";
 import { ForbiddenError, getApiCtx, type Ctx } from "../services/ctx";
 import { NotFoundError } from "../services/contacts";
 
-type Params = Promise<Record<string, string>>;
+type Params = Promise<Record<string, string>> | undefined;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Wraps an /api/v1 handler: signs the caller in from the bearer token and turns errors into JSON. */
 export function api(handler: (ctx: Ctx, request: Request, params: Record<string, string>) => Promise<unknown>) {
-  return async (request: Request, { params }: { params: Params }) => {
-    const p = await params;
-    for (const [k, v] of Object.entries(p)) {
-      if (k === "id" && !UUID.test(v)) return Response.json({ error: "Not found." }, { status: 404 });
-    }
-    const ctx = await getApiCtx(request);
-    if (!ctx) return Response.json({ error: "Sign in required." }, { status: 401 });
+  return async (request: Request, context?: { params?: Params }) => {
     try {
+      // Routes without a URL segment get no params at all, so default to none.
+      const p = (await context?.params) ?? {};
+      if ("id" in p && !UUID.test(p.id)) return Response.json({ error: "Not found." }, { status: 404 });
+      const ctx = await getApiCtx(request);
+      if (!ctx) return Response.json({ error: "Sign in required." }, { status: 401 });
       const out = await handler(ctx, request, p);
       return Response.json(out ?? { ok: true });
     } catch (e) {
