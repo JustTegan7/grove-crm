@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidPhone, PHONE_ERROR } from "./phone";
 import { TIERS } from "./types";
 
 const ymd = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date");
@@ -37,12 +38,21 @@ export const contactFields = {
   notes: optText(10000),
 };
 
+/** Strict phone check for forms and the phone app. The CSV importer stays lenient so old sheets still import. */
+export const phoneInput = z
+  .string()
+  .trim()
+  .max(40)
+  .optional()
+  .transform((v) => (v ? v : null))
+  .refine((v) => v === null || isValidPhone(v), PHONE_ERROR);
+
 export const createContactInput = z.object({
   name: contactFields.name,
   niche: contactFields.niche,
   source: contactFields.source,
   contactName: contactFields.contactName,
-  phone: contactFields.phone,
+  phone: phoneInput,
   email: contactFields.email,
   website: contactFields.website,
   ownerId: z.string().min(1).optional(),
@@ -53,6 +63,7 @@ export type CreateContactInput = z.input<typeof createContactInput>;
 export const updateContactInput = z.object({
   id: z.string().uuid(),
   ...contactFields,
+  phone: phoneInput,
 });
 
 export const moveStageInput = z.object({ id: z.string().uuid(), stageId: z.string().uuid() });

@@ -25,6 +25,7 @@ export interface TaskView {
   contactId: string | null;
   contactName: string | null;
   contactPhone: string | null;
+  contactEmail?: string | null;
   owner?: { name: string; color: string };
   message?: { subject: string | null; body: string };
 }

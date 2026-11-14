@@ -31,7 +31,7 @@ export default function NewLead() {
     <Screen>
       <Input label="Business name" value={f.name} onChangeText={set("name")} autoFocus />
       <Input label="Contact name" value={f.contactName} onChangeText={set("contactName")} autoComplete="name" />
-      <Input label="Phone" value={f.phone} onChangeText={set("phone")} keyboardType="phone-pad" autoComplete="tel" />
+      <Input label="Phone (start with + for other countries)" value={f.phone} onChangeText={set("phone")} keyboardType="phone-pad" autoComplete="tel" placeholder="(425) 555-0123 or +44 20 7946 0958" />
       <Input label="Email" value={f.email} onChangeText={set("email")} keyboardType="email-address" autoCapitalize="none" />
       <Input label="Niche" value={f.niche} onChangeText={set("niche")} />
       {error && <Text accessibilityRole="alert" style={{ color: t.overdue }}>{error}</Text>}

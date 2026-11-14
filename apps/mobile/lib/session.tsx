@@ -17,7 +17,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const refresh = useCallback(async () => {
     if (!(await getToken())) return setState({ status: "out" });
-    setState({ status: "loading" });
+    // Only show the loading screen the first time. Refreshing after an action must not rebuild the tabs.
+    setState((s) => (s.status === "in" ? s : { status: "loading" }));
     try {
       setState({ status: "in", me: await api<Me>("/me") });
     } catch (e) {

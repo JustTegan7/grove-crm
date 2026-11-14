@@ -24,6 +24,7 @@ export function toTaskView(t: TaskRow, members: Member[], source?: MessageSource
     contactId: t.contactId,
     contactName: t.contactName,
     contactPhone: t.contactPhone,
+    contactEmail: t.contactEmail,
     owner: m ? { name: m.name, color: m.color } : undefined,
     message: tpl && source ? fillTemplate(tpl, { business: t.contactName ?? "", contactName: t.contactPerson, owner: source.sender, company: source.company }) : undefined,
   };

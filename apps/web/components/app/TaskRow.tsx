@@ -19,6 +19,7 @@ export type TaskView = {
   contactId: string | null;
   contactName: string | null;
   contactPhone: string | null;
+  contactEmail?: string | null;
   owner?: { name: string; color: string };
   /** The workspace template for this follow-up, already filled in for this business. */
   message?: { subject: string | null; body: string };

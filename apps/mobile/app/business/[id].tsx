@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { Linking, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Body, Button, Card, Chip, Empty, Input, Screen } from "../../components/ui";
 import { api } from "../../lib/api";
-import { dueLabel } from "../../lib/shared";
+import { dueLabel, firstName, renderMessage } from "../../lib/shared";
+import { callLink, mailLink, open, smsLink } from "../../lib/links";
 import { useMe, useSession } from "../../lib/session";
 import { useTheme } from "../../lib/theme";
 import type { BusinessDetail } from "../../lib/types";
@@ -49,7 +51,6 @@ export default function BusinessScreen() {
 
   if (!d) return <Screen><Empty text={notice ?? "Loading..."} /></Screen>;
   const c = d.contact;
-  const phone = c.phone?.replace(/[^\d+]/g, "");
   const stage = me.stages.find((s) => s.id === c.stageId);
   const owner = me.members.find((m) => m.id === c.ownerId);
 
@@ -63,10 +64,10 @@ export default function BusinessScreen() {
         <Body small muted>Contact</Body>
         <Body>{[c.contactName, c.contactRole].filter(Boolean).join(", ") || "No contact name yet"}</Body>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
-          {phone && <Button small title="Call" onPress={() => Linking.openURL(`tel:${phone}`)} />}
-          {phone && <Button small kind="soft" title="Text" onPress={() => Linking.openURL(`sms:${phone}`)} />}
-          {c.email && <Button small kind="soft" title="Email" onPress={() => Linking.openURL(`mailto:${c.email}`)} />}
-          {c.website && <Button small kind="soft" title="Website" onPress={() => Linking.openURL(/^https?:/i.test(c.website!) ? c.website! : `https://${c.website}`)} />}
+          {c.phone && <Button small title="Call" onPress={() => open(callLink(c.phone!))} />}
+          {c.phone && <Button small kind="soft" title="Text" onPress={() => open(smsLink(c.phone!))} />}
+          {c.email && <Button small kind="soft" title="Email" onPress={() => open(mailLink(c.email!))} />}
+          {c.website && <Button small kind="soft" title="Website" onPress={() => open(/^https?:/i.test(c.website!) ? c.website! : `https://${c.website}`)} />}
         </View>
         {c.phone && <Body small muted>{c.phone}</Body>}
         {c.email && <Body small muted>{c.email}</Body>}
@@ -90,6 +91,28 @@ export default function BusinessScreen() {
           </View>
         ))}
       </Card>
+
+      {me.templates.length > 0 && (
+        <Card>
+          <Body small muted>Message templates (filled in for {c.name})</Body>
+          {me.templates.map((tpl) => {
+            const v = { business: c.name, contact: c.contactName, first_name: firstName(c.contactName), owner: firstName(me.user.name) ?? me.user.name, company: me.workspace.name };
+            const body = renderMessage(tpl.body, v);
+            const subject = tpl.subject ? renderMessage(tpl.subject, v) : null;
+            const canOpen = (tpl.channel === "text" && c.phone) || (tpl.channel === "email" && c.email);
+            return (
+              <View key={tpl.id} style={{ paddingVertical: 6, gap: 6 }}>
+                <Body bold>{tpl.name}</Body>
+                <Body small muted>{body.length > 140 ? `${body.slice(0, 140)}...` : body}</Body>
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <Button small kind="soft" title={tpl.channel === "call" ? "Copy script" : "Copy"} onPress={async () => { await Clipboard.setStringAsync(subject ? `Subject: ${subject}\n\n${body}` : body); setNotice("Copied."); }} />
+                  {canOpen && <Button small title={tpl.channel === "text" ? "Open in Messages" : "Open in Mail"} onPress={() => open(tpl.channel === "text" ? smsLink(c.phone!, body) : mailLink(c.email!, subject, body))} />}
+                </View>
+              </View>
+            );
+          })}
+        </Card>
+      )}
 
       {c.notes ? <Card><Body small muted>Notes</Body><Body>{c.notes}</Body></Card> : null}
 

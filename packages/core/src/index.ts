@@ -8,3 +8,4 @@ export * from "./search";
 export * from "./files";
 export * from "./messages";
 export * from "./retention";
+export * from "./phone";

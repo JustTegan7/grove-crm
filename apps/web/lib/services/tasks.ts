@@ -22,6 +22,7 @@ const taskCols = {
   contactName: contacts.name,
   contactPhone: contacts.phone,
   contactPerson: contacts.contactName,
+  contactEmail: contacts.email,
   stepDay: cadenceSteps.day,
 };
 export type TaskRow = {
@@ -37,6 +38,7 @@ export type TaskRow = {
   contactName: string | null;
   contactPhone: string | null;
   contactPerson: string | null;
+  contactEmail: string | null;
   stepDay: number | null;
 };
 
