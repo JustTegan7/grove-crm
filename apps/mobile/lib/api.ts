@@ -1,7 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 
-// Set EXPO_PUBLIC_API_URL for a preview deploy. Production is thegrovecms.com.
-export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? "https://thegrovecms.com").replace(/\/$/, "");
+// Set EXPO_PUBLIC_API_URL for a preview deploy. Production is www.thegrovecms.com (the bare domain redirects there, and a redirect can drop a POST body or login header).
+export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? "https://www.thegrovecms.com").replace(/\/$/, "");
 const KEY = "grove.session";
 
 let cached: string | null | undefined;
