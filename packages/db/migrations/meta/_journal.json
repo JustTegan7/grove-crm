@@ -57,6 +57,13 @@
       "when": 1794689364068,
       "tag": "0007_deep_wolfsbane",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794690183328,
+      "tag": "0008_rainy_captain_stacy",
+      "breakpoints": true
     }
   ]
 }

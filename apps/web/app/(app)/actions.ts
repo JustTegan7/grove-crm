@@ -10,6 +10,7 @@ import * as files from "../../lib/services/files";
 import * as team from "../../lib/services/team";
 import * as messages from "../../lib/services/messages";
 import * as invites from "../../lib/services/invites";
+import { safeMessage } from "../../lib/safe-error";
 import * as settings from "../../lib/services/settings";
 
 // Thin wrappers: build ctx, call a service, refresh the pages.
@@ -23,8 +24,7 @@ async function run(fn: (ctx: Ctx) => Promise<{ message: string; id?: string; und
     return { ok: true, ...res };
   } catch (e) {
     if (e instanceof ZodError) return { ok: false, error: e.issues[0]?.message ?? "Check the form." };
-    if (e instanceof Error) return { ok: false, error: e.message };
-    return { ok: false, error: "Something went wrong." };
+    return { ok: false, error: safeMessage(e) };
   }
 }
 

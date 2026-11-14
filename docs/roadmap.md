@@ -6,3 +6,7 @@
 4. **Dealership pilot**: dealership stage template and multi-workspace sign-up are in (2026-11-14, sign-up behind GROVE_OPEN_SIGNUP). Next: Drivonic integration.
 5. **iPhone app**: Expo, QR scan-to-login, push notifications, offline sync.
 6. **Data retention job**: socials clear after 4 weeks, contact info clears 4 weeks after DNC or going cold.
+
+## Back burner
+- Two-factor sign-in for Grove logins (paused by Tegan before the first store submission).
+- Audit log, AI-personalized messages, dealership version (v3).

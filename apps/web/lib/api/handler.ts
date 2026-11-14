@@ -1,6 +1,7 @@
 import "server-only";
 import { ZodError } from "zod";
 import { ForbiddenError, getApiCtx, type Ctx } from "../services/ctx";
+import { safeMessage } from "../safe-error";
 import { NotFoundError } from "../services/contacts";
 import { BillingRequiredError, requireAccess } from "../services/billing";
 
@@ -25,7 +26,10 @@ export function api(handler: (ctx: Ctx, request: Request, params: Record<string,
       if (e instanceof BillingRequiredError) return Response.json({ error: e.message, code: "billing" }, { status: 402 });
       if (e instanceof ForbiddenError) return Response.json({ error: e.message }, { status: 403 });
       if (e instanceof NotFoundError) return Response.json({ error: e.message }, { status: 404 });
-      if (e instanceof Error) return Response.json({ error: e.message }, { status: 400 });
+      if (e instanceof Error) {
+        const msg = safeMessage(e);
+        return Response.json({ error: msg }, { status: msg === e.message ? 400 : 500 });
+      }
       return Response.json({ error: "Something went wrong." }, { status: 500 });
     }
   };

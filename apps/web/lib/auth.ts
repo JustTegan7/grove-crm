@@ -27,7 +27,7 @@ function createAuth() {
     ],
     database: drizzleAdapter(db(), {
       provider: "pg",
-      schema: { user: schema.user, session: schema.session, account: schema.account, verification: schema.verification },
+      schema: { user: schema.user, session: schema.session, account: schema.account, verification: schema.verification, rateLimit: schema.rateLimit },
     }),
     emailAndPassword: {
       enabled: true,
@@ -43,7 +43,19 @@ function createAuth() {
         });
       },
     },
-    rateLimit: { enabled: true, window: 60, max: 30 },
+    // Counted in the database so the limits hold across serverless instances. Sign-in and sign-up get much tighter limits.
+    rateLimit: {
+      enabled: true,
+      storage: "database",
+      window: 60,
+      max: 60,
+      customRules: {
+        "/sign-in/email": { window: 60, max: 8 },
+        "/sign-up/email": { window: 60, max: 5 },
+        "/request-password-reset": { window: 300, max: 5 },
+        "/reset-password": { window: 300, max: 10 },
+      },
+    },
     databaseHooks: {
       user: {
         create: {

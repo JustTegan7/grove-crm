@@ -1,6 +1,7 @@
 "use server";
 
 import { ZodError } from "zod";
+import { safeMessage } from "../../lib/safe-error";
 import { getCtx } from "../../lib/services/ctx";
 import { createCheckout, createPortal } from "../../lib/services/billing";
 
@@ -11,7 +12,7 @@ async function run(fn: () => Promise<{ url: string }>): Promise<UrlResult> {
     return { ok: true, ...(await fn()) };
   } catch (e) {
     if (e instanceof ZodError) return { ok: false, error: e.issues[0]?.message ?? "Check the form." };
-    return { ok: false, error: e instanceof Error ? e.message : "Something went wrong." };
+    return { ok: false, error: safeMessage(e) };
   }
 }
 

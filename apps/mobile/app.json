@@ -15,7 +15,11 @@
       }
     },
     "android": {
-      "package": "com.thegrovecms.app"
+      "package": "com.thegrovecms.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F3D3A"
+      }
     },
     "plugins": [
       "expo-router",
@@ -37,6 +41,14 @@
         "expo-notifications",
         {
           "color": "#4FB39C"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "backgroundColor": "#0F3D3A",
+          "imageWidth": 160
         }
       ]
     ],

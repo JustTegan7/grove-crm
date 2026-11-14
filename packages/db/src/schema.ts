@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   date,
   index,
@@ -298,6 +299,15 @@ export const subscriptions = pgTable("subscriptions", {
   cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
   ...stamps,
 }, (t) => [index("subscriptions_stripe_customer").on(t.stripeCustomerId)]);
+
+// Request counters for rate limiting. Better Auth reads and writes this table for its own endpoints (so limits hold
+// across Vercel instances), and lib/rate-limit.ts uses it for the QR login endpoints.
+export const rateLimit = pgTable("rate_limit", {
+  id: text("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  count: integer("count").notNull(),
+  lastRequest: bigint("last_request", { mode: "number" }).notNull(),
+});
 
 // A phone that has allowed Grove to send reminders. One row per Expo push token.
 export const pushDevices = pgTable("push_devices", {
