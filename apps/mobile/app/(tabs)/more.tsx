@@ -1,10 +1,33 @@
+import { useState } from "react";
+import { Text } from "react-native";
 import { router } from "expo-router";
-import { Body, Button, Card, Screen } from "../../components/ui";
+import { Body, Button, Card, Input, Screen } from "../../components/ui";
+import { api, setToken } from "../../lib/api";
+import { useTheme } from "../../lib/theme";
 import { useMe, useSession } from "../../lib/session";
 
 export default function More() {
   const me = useMe();
   const { signOut } = useSession();
+  const t = useTheme();
+  const [open, setOpen] = useState(false);
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function remove() {
+    setBusy(true);
+    setError(null);
+    try {
+      await api("/account", { method: "DELETE", body: { confirm } });
+      await setToken(null);
+      await signOut();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "That did not work.");
+      setBusy(false);
+    }
+  }
+
   return (
     <Screen>
       <Card>
@@ -18,6 +41,22 @@ export default function More() {
         <Button title="Scan to log in" onPress={() => router.push("/scan")} />
       </Card>
       <Button kind="soft" title="Sign out" onPress={signOut} />
+      <Card>
+        <Body bold>Delete account</Body>
+        <Body small muted>
+          Deletes your login. If you are the only person in your workspace, the workspace and everything in it is deleted too. Otherwise your businesses and tasks go to a teammate.
+        </Body>
+        {!open ? (
+          <Button small kind="danger" title="Delete my account" onPress={() => setOpen(true)} />
+        ) : (
+          <>
+            <Input label={`Type ${me.user.email} to confirm`} value={confirm} onChangeText={setConfirm} autoCapitalize="none" keyboardType="email-address" />
+            {error && <Text accessibilityRole="alert" style={{ color: t.overdue }}>{error}</Text>}
+            <Button kind="danger" title="Permanently delete" busy={busy} disabled={!confirm} onPress={remove} />
+            <Button small kind="soft" title="Cancel" onPress={() => { setOpen(false); setConfirm(""); setError(null); }} />
+          </>
+        )}
+      </Card>
     </Screen>
   );
 }
