@@ -299,6 +299,15 @@ export const subscriptions = pgTable("subscriptions", {
   ...stamps,
 }, (t) => [index("subscriptions_stripe_customer").on(t.stripeCustomerId)]);
 
+// A phone that has allowed Grove to send reminders. One row per Expo push token.
+export const pushDevices = pgTable("push_devices", {
+  id: id(),
+  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  platform: text("platform").notNull().default("ios"),
+  ...stamps,
+}, (t) => [index("push_devices_user").on(t.userId)]);
+
 // Log in on the web by scanning a QR code with the phone app. Only hashes of the code and the
 // poll secret are stored. The one-time token is cleared the moment the web browser collects it.
 export const qrLogins = pgTable(

@@ -156,3 +156,8 @@ The iPhone app comes after the web app. These choices cost little now and a lot 
 - Billing stays off until `GROVE_BILLING=on`. Migration 0006 marks every existing workspace comped, so enabling billing never locks out Evergreen.
 - Seats: invites are blocked when a plan has no room (Solo, or an included package at its limit). Team and Dealership quantities sync to Stripe when people join or leave. Deleting the last member cancels the Stripe subscription.
 - The iPhone app has no purchase UI, so it stays outside Apple's in-app purchase rules. A blocked workspace gets a 402 from /api/v1.
+
+## Field kit extras (v2.1)
+- Photos: Take photo or Choose photo on a business uploads to the existing private file store through POST /api/v1/businesses/[id]/files. Quality is 0.5 so a phone photo stays under the 4 MB limit.
+- Offline capture: only new leads are queued on the phone, and only when the request never left the phone (no signal). A timeout is not queued, because the server may have saved it and a retry would duplicate it. Queued leads send on app open, on coming back to the app, and when the connection returns, and Today shows how many are waiting.
+- Reminders: a phone registers an Expo push token after the person taps Turn on reminders. A daily cron at 16:00 UTC (8 or 9 in the morning Pacific) sends one push to people with tasks due or overdue, counted in each person's own time zone. Remote push does not work in Expo Go on every platform, so test it in the EAS build.

@@ -23,7 +23,20 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Grove uses the camera only to scan the QR code that logs you in on your computer."
+          "cameraPermission": "Grove uses the camera to scan the QR code that logs you in on your computer and to photograph a storefront or business card for a lead."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Grove uses the camera to scan the QR code that logs you in on your computer and to photograph a storefront or business card for a lead.",
+          "photosPermission": "Grove lets you attach photos from your library to a lead."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#4FB39C"
         }
       ]
     ],

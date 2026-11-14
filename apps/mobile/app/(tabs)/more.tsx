@@ -5,6 +5,7 @@ import { Body, Button, Card, Input, Screen } from "../../components/ui";
 import { api, setToken } from "../../lib/api";
 import { useTheme } from "../../lib/theme";
 import { useMe, useSession } from "../../lib/session";
+import { disableReminders, enableReminders } from "../../lib/push";
 
 export default function More() {
   const me = useMe();
@@ -14,6 +15,7 @@ export default function More() {
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [remindNote, setRemindNote] = useState<string | null>(null);
 
   async function remove() {
     setBusy(true);
@@ -39,6 +41,13 @@ export default function More() {
         <Body bold>Log in on your computer</Body>
         <Body small muted>Open Grove in your browser, choose Log in with your phone, then scan the code.</Body>
         <Button title="Scan to log in" onPress={() => router.push("/scan")} />
+      </Card>
+      <Card>
+        <Body bold>Daily reminders</Body>
+        <Body small muted>A notification each morning when follow-ups are due. Nothing is sent on days with nothing due.</Body>
+        {remindNote && <Body small>{remindNote}</Body>}
+        <Button small title="Turn on reminders" onPress={async () => setRemindNote(await enableReminders())} />
+        <Button small kind="soft" title="Turn off on this phone" onPress={async () => { await disableReminders(); setRemindNote("Reminders are off on this phone."); }} />
       </Card>
       <Card>
         <Body bold>Message templates</Body>

@@ -50,6 +50,13 @@
       "when": 1794689155737,
       "tag": "0006_thick_ultron",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794689364068,
+      "tag": "0007_deep_wolfsbane",
+      "breakpoints": true
     }
   ]
 }

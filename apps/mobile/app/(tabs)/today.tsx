@@ -10,7 +10,7 @@ import type { TaskView } from "../../lib/types";
 
 export default function Today() {
   const me = useMe();
-  const { refresh } = useSession();
+  const { refresh, waiting, syncNow } = useSession();
   const t = useTheme();
   const [tasks, setTasks] = useState<TaskView[] | null>(null);
   const [scope, setScope] = useState<"mine" | "all">("mine");
@@ -75,6 +75,13 @@ export default function Today() {
         <H1>Hi {me.user.name.split(" ")[0]}</H1>
         <Body muted>{me.workspace.name}</Body>
         {notice && <Text accessibilityLiveRegion="polite" style={{ color: t.fg, backgroundColor: t.surface2, padding: 10, borderRadius: 10 }}>{notice}</Text>}
+        {waiting > 0 && (
+          <View style={{ backgroundColor: t.surface2, borderRadius: 14, padding: 14, gap: 8 }}>
+            <Body bold>{waiting === 1 ? "1 lead saved on this phone" : `${waiting} leads saved on this phone`}</Body>
+            <Body small muted>They send automatically when you have a connection.</Body>
+            <Button small kind="soft" title="Try now" onPress={async () => setNotice(await syncNow())} />
+          </View>
+        )}
         {asking && (
           <View style={{ backgroundColor: t.surface2, borderRadius: 14, padding: 14, gap: 8 }}>
             <Body bold>Finished with {asking.contactName ?? "that task"}?</Body>
