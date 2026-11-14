@@ -161,3 +161,8 @@ The iPhone app comes after the web app. These choices cost little now and a lot 
 - Photos: Take photo or Choose photo on a business uploads to the existing private file store through POST /api/v1/businesses/[id]/files. Quality is 0.5 so a phone photo stays under the 4 MB limit.
 - Offline capture: only new leads are queued on the phone, and only when the request never left the phone (no signal). A timeout is not queued, because the server may have saved it and a retry would duplicate it. Queued leads send on app open, on coming back to the app, and when the connection returns, and Today shows how many are waiting.
 - Reminders: a phone registers an Expo push token after the person taps Turn on reminders. A daily cron at 16:00 UTC (8 or 9 in the morning Pacific) sends one push to people with tasks due or overdue, counted in each person's own time zone. Remote push does not work in Expo Go on every platform, so test it in the EAS build.
+
+## Security hardening (Nov 2026)
+- Auth rate limits moved to database storage with tight rules on sign-in, sign-up and reset. Memory storage does not work across serverless instances. A rate_limit table backs this and the QR login limits.
+- Internal error text (SQL, connection details) is filtered out before it reaches the phone API or server actions.
+- Next.js pinned to 16.4.6 for the critical advisories. Full list and the owner checklist are in docs/security.md.
