@@ -3,6 +3,7 @@ import { betterAuth } from "better-auth";
 import { APIError } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
+import { bearer, oneTimeToken } from "better-auth/plugins";
 import { schema } from "@grove/db";
 import { db } from "./db";
 import { teamAllowlist } from "./team";
@@ -14,8 +15,9 @@ function createAuth() {
   return betterAuth({
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL: process.env.BETTER_AUTH_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined),
-    // When the Expo app is added: add the expo() plugin and "grove://" here.
+    // The iPhone app signs in with email and password and sends the session token as a bearer token.
     trustedOrigins: [
+      "grove://",
       "https://thegrovecms.com",
       "https://www.thegrovecms.com",
       "https://grove-crm.vercel.app",
@@ -62,7 +64,8 @@ function createAuth() {
         },
       },
     },
-    plugins: [nextCookies()],
+    // oneTimeToken hands a phone-approved QR login to the web browser, valid for 2 minutes.
+    plugins: [bearer(), oneTimeToken({ expiresIn: 2, storeToken: "hashed" }), nextCookies()],
   });
 }
 
