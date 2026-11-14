@@ -1,12 +1,13 @@
-import { Linking, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { router } from "expo-router";
 import * as Clipboard from "expo-clipboard";
 import { Body, Button, Card } from "./ui";
 import { dueLabel, dueState } from "../lib/shared";
 import { useTheme } from "../lib/theme";
+import { callLink, mailLink, open, smsLink } from "../lib/links";
 import type { TaskView } from "../lib/types";
 
-export function TaskCard({ task, today, busy, onComplete, onSnooze, onDecide, onNotice }: {
+export function TaskCard({ task, today, busy, onComplete, onSnooze, onDecide, onNotice, onOpened }: {
   task: TaskView;
   today: string;
   busy: boolean;
@@ -14,11 +15,14 @@ export function TaskCard({ task, today, busy, onComplete, onSnooze, onDecide, on
   onSnooze: (id: string) => void;
   onDecide: (id: string, choice: "recycle" | "dnc") => void;
   onNotice: (msg: string) => void;
+  /** Called after the phone, messages or mail app is opened, so Today can ask whether to mark it done. */
+  onOpened: (task: TaskView) => void;
 }) {
   const t = useTheme();
   const s = dueState(task.dueDate, today);
   const dueColor = s === "overdue" ? t.overdue : s === "today" ? t.today : t.muted;
-  const phone = task.contactPhone?.replace(/[^\d+]/g, "");
+  const phone = task.contactPhone;
+  const go = (url: string) => { open(url).catch(() => onNotice("Could not open that app.")); onOpened(task); };
 
   async function copy() {
     const m = task.message;
@@ -50,8 +54,9 @@ export function TaskCard({ task, today, busy, onComplete, onSnooze, onDecide, on
             <Button small title="Done" busy={busy} onPress={() => onComplete(task.id)} />
             <Button small kind="soft" title="Tomorrow" busy={busy} onPress={() => onSnooze(task.id)} />
             {task.message && <Button small kind="soft" title={task.channel === "call" ? "Copy script" : "Copy message"} onPress={copy} />}
-            {task.channel === "call" && phone && <Button small kind="soft" title="Call" onPress={() => Linking.openURL(`tel:${phone}`)} />}
-            {task.channel === "text" && phone && <Button small kind="soft" title="Text" onPress={() => Linking.openURL(`sms:${phone}`)} />}
+            {task.channel === "call" && phone && <Button small kind="soft" title="Call" onPress={() => go(callLink(phone))} />}
+            {task.channel === "text" && phone && <Button small kind="soft" title="Text" onPress={() => go(smsLink(phone, task.message?.body))} />}
+            {task.channel === "email" && task.contactEmail && <Button small kind="soft" title="Email" onPress={() => go(mailLink(task.contactEmail!, task.message?.subject, task.message?.body))} />}
           </>
         )}
       </View>

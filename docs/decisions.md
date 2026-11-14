@@ -137,3 +137,9 @@ The iPhone app comes after the web app. These choices cost little now and a lot 
 - Offline sync engine for the phone (build simple "changes since" sync first, pick a library only if needed).
 - Push provider details (Expo push service is the default plan).
 - Dealership stage template.
+
+## Phone polish (v2)
+- Phone numbers are validated on create and update only: 7 to 15 digits, optional leading + and country code, optional extension. The CSV importer stays lenient so old sheets still import. Numbers are stored as typed; `dialable()` in core strips formatting for tel and sms links.
+- Call, Text and Email on a task open the native app with the message prefilled. Nothing tracks automatically. After the app opens, returning to Grove on Today asks "Finished?" with Mark done or Not yet.
+- Session refresh is silent once signed in, so the tab navigator is no longer rebuilt after an action.
+- Message templates on mobile: each business profile lists templates filled in for that business, with Copy and Open in Messages or Mail. More shows a pointer. Editing stays on the web.

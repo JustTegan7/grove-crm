@@ -40,6 +40,10 @@ export default function More() {
         <Body small muted>Open Grove in your browser, choose Log in with your phone, then scan the code.</Body>
         <Button title="Scan to log in" onPress={() => router.push("/scan")} />
       </Card>
+      <Card>
+        <Body bold>Message templates</Body>
+        <Body small muted>{me.templates.length} templates. Open any business to copy or send one filled in for them, or tap Copy message on a task. Edit the wording on the web at thegrovecms.com/templates.</Body>
+      </Card>
       <Button kind="soft" title="Sign out" onPress={signOut} />
       <Card>
         <Body bold>Delete account</Body>

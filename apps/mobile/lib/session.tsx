@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import { api, getToken, setToken, signInWithPassword } from "./api";
 import type { Me } from "./types";
 
-type State = { status: "loading" } | { status: "out" } | { status: "in"; me: Me };
+type State = { status: "loading" } | { status: "out" } | { status: "error"; message: string } | { status: "in"; me: Me };
 interface Value {
   state: State;
   signIn: (email: string, password: string) => Promise<void>;
@@ -17,12 +17,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const refresh = useCallback(async () => {
     if (!(await getToken())) return setState({ status: "out" });
+    // Only show the loading screen the first time. Refreshing after an action must not rebuild the tabs.
+    setState((s) => (s.status === "in" ? s : { status: "loading" }));
     try {
       setState({ status: "in", me: await api<Me>("/me") });
     } catch (e) {
-      // A 401 already cleared the token. For a network error we keep the token and show login only if there is none.
-      setState((await getToken()) ? { status: "loading" } : { status: "out" });
-      if (await getToken()) setTimeout(refresh, 3000);
+      // A 401 already cleared the token and means log in again. Anything else is shown with a Retry button.
+      if (!(await getToken())) return setState({ status: "out" });
+      setState({ status: "error", message: e instanceof Error ? e.message : "Could not reach Grove." });
     }
   }, []);
 
