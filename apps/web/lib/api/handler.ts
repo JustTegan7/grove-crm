@@ -2,6 +2,7 @@ import "server-only";
 import { ZodError } from "zod";
 import { ForbiddenError, getApiCtx, type Ctx } from "../services/ctx";
 import { NotFoundError } from "../services/contacts";
+import { BillingRequiredError, requireAccess } from "../services/billing";
 
 type Params = Promise<Record<string, string>> | undefined;
 
@@ -16,10 +17,12 @@ export function api(handler: (ctx: Ctx, request: Request, params: Record<string,
       if ("id" in p && !UUID.test(p.id)) return Response.json({ error: "Not found." }, { status: 404 });
       const ctx = await getApiCtx(request);
       if (!ctx) return Response.json({ error: "Sign in required." }, { status: 401 });
+      await requireAccess(ctx);
       const out = await handler(ctx, request, p);
       return Response.json(out ?? { ok: true });
     } catch (e) {
       if (e instanceof ZodError) return Response.json({ error: e.issues[0]?.message ?? "Check the form." }, { status: 400 });
+      if (e instanceof BillingRequiredError) return Response.json({ error: e.message, code: "billing" }, { status: 402 });
       if (e instanceof ForbiddenError) return Response.json({ error: e.message }, { status: 403 });
       if (e instanceof NotFoundError) return Response.json({ error: e.message }, { status: 404 });
       if (e instanceof Error) return Response.json({ error: e.message }, { status: 400 });

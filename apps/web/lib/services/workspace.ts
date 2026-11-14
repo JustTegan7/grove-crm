@@ -1,10 +1,10 @@
-import { defaultVisibility } from "@grove/core";
 import "server-only";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
-import { cadenceSteps, invites, memberships, messageTemplates, pipelineStages, user, workspaces } from "@grove/db";
-import { ACCOUNT_TYPES, defaultMessageTemplates, templateForAccountType, templates, type AccountType, type CadenceStepDef, type StageDef } from "@grove/core";
+import { cadenceSteps, invites, memberships, messageTemplates, pipelineStages, subscriptions, user, workspaces } from "@grove/db";
+import { ACCOUNT_TYPES, defaultMessageTemplates, defaultVisibility, templateForAccountType, templates, type AccountType, type CadenceStepDef, type StageDef } from "@grove/core";
 import { db } from "../db";
+import { billingEnabled } from "../stripe";
 import { teamAllowlist } from "../team";
 
 const MEMBER_COLORS = ["#4FB39C", "#E8B33A", "#7FC28A", "#C8643C", "#6C8CD5", "#B07CC6"];
@@ -60,6 +60,12 @@ export async function startWorkspace(userId: string, raw: unknown) {
   if (already.length) throw new Error("You already have a workspace.");
   const ws = await createWorkspaceFromTemplate(workspaceName, templateForAccountType[accountType], accountType);
   await db().insert(memberships).values({ workspaceId: ws.id, userId, role: "owner", color: MEMBER_COLORS[0] }).onConflictDoNothing();
+  // With billing on, a new workspace waits for a card-required trial. With billing off it is free, as before.
+  const on = billingEnabled();
+  await db()
+    .insert(subscriptions)
+    .values({ workspaceId: ws.id, plan: on ? (accountType === "dealership" ? "dealership" : "solo") : "comped", status: on ? "incomplete" : "comped" })
+    .onConflictDoNothing();
   return ws;
 }
 
@@ -88,6 +94,11 @@ export async function acceptInvites(userId: string, email: string) {
         .onConflictDoNothing(),
       db().update(invites).set({ acceptedAt: new Date() }).where(eq(invites.id, inv.id)),
     ]);
+  }
+  if (pending.length) {
+    // Loaded on demand because billing itself reads the member list from this file.
+    const { syncSeats } = await import("./billing");
+    for (const ws of new Set(pending.map((p) => p.workspaceId))) await syncSeats(ws);
   }
   return pending.length;
 }

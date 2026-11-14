@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { getCtx } from "../../lib/services/ctx";
+import { accessOk } from "../../lib/services/billing";
 import { listContacts } from "../../lib/services/contacts";
 import { myDueCount } from "../../lib/services/tasks";
 import { loadMembers } from "../../lib/services/workspace";
@@ -12,6 +14,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const ctx = await getCtx();
+  if (!(await accessOk(ctx))) redirect("/billing");
   const [members, businesses, badge] = await Promise.all([
     loadMembers(ctx.workspace.id),
     listContacts(ctx, { sort: "name" }),
