@@ -3,12 +3,23 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { SessionProvider, useSession } from "../lib/session";
 import { useTheme } from "../lib/theme";
-import { Empty } from "../components/ui";
+import { Body, Button, Empty } from "../components/ui";
+import { View } from "react-native";
 
 function Gate() {
-  const { state } = useSession();
+  const { state, refresh, signOut } = useSession();
   const t = useTheme();
   if (state.status === "loading") return <Empty text="Loading Grove..." />;
+  if (state.status === "error") {
+    return (
+      <View style={{ flex: 1, backgroundColor: t.bg, justifyContent: "center", padding: 24, gap: 12 }}>
+        <Body bold>Grove could not load</Body>
+        <Body small muted>{state.message}</Body>
+        <Button title="Try again" onPress={refresh} />
+        <Button kind="soft" title="Sign out" onPress={signOut} />
+      </View>
+    );
+  }
   const out = state.status === "out";
   return (
     <Stack screenOptions={{ headerStyle: { backgroundColor: t.surface }, headerTintColor: t.fg, contentStyle: { backgroundColor: t.bg } }}>

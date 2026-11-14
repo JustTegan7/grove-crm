@@ -15,6 +15,19 @@ export async function setToken(t: string | null) {
   else await SecureStore.deleteItemAsync(KEY);
 }
 
+/** A request that never answers should show an error, not spin forever. */
+async function fetchWithTimeout(url: string, init: RequestInit, ms = 20000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal });
+  } catch (e) {
+    throw new ApiError(e instanceof Error && e.name === "AbortError" ? "Grove took too long to answer. Check your connection and try again." : "Could not reach Grove. Check your connection.", 0);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export class ApiError extends Error {
   constructor(message: string, public status: number) {
     super(message);
@@ -24,7 +37,7 @@ export class ApiError extends Error {
 /** Calls /api/v1 with the stored session token. A 401 clears the token so the app returns to login. */
 export async function api<T = unknown>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
   const token = await getToken();
-  const res = await fetch(`${API_URL}/api/v1${path}`, {
+  const res = await fetchWithTimeout(`${API_URL}/api/v1${path}`, {
     method: init.method ?? (init.body ? "POST" : "GET"),
     headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: init.body ? JSON.stringify(init.body) : undefined,
@@ -40,7 +53,7 @@ export async function api<T = unknown>(path: string, init: { method?: string; bo
 
 /** Email and password sign-in. Better Auth returns the session token in the set-auth-token header. */
 export async function signInWithPassword(email: string, password: string) {
-  const res = await fetch(`${API_URL}/api/auth/sign-in/email`, {
+  const res = await fetchWithTimeout(`${API_URL}/api/auth/sign-in/email`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Origin: API_URL },
     body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
