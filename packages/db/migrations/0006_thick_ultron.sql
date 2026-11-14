@@ -1,4 +1,4 @@
-CREATE TABLE "subscriptions" (
+CREATE TABLE IF NOT EXISTS "subscriptions" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"workspace_id" uuid NOT NULL,
 	"plan" text DEFAULT 'solo' NOT NULL,
@@ -17,8 +17,8 @@ CREATE TABLE "subscriptions" (
 	CONSTRAINT "subscriptions_workspace_id_unique" UNIQUE("workspace_id")
 );
 --> statement-breakpoint
-ALTER TABLE "subscriptions" ADD CONSTRAINT "subscriptions_workspace_id_workspaces_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."workspaces"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "subscriptions_stripe_customer" ON "subscriptions" USING btree ("stripe_customer_id");
+DO $$ BEGIN ALTER TABLE "subscriptions" ADD CONSTRAINT "subscriptions_workspace_id_workspaces_id_fk" FOREIGN KEY ("workspace_id") REFERENCES "public"."workspaces"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN NULL; END $$;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "subscriptions_stripe_customer" ON "subscriptions" USING btree ("stripe_customer_id");
 --> statement-breakpoint
 -- Every workspace that exists today keeps working free. Only workspaces created after billing goes live start a trial.
 INSERT INTO "subscriptions" ("id", "workspace_id", "plan", "status") SELECT gen_random_uuid(), "id", 'comped', 'comped' FROM "workspaces" ON CONFLICT ("workspace_id") DO NOTHING;
