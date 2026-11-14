@@ -49,6 +49,9 @@ describe("helpers", () => {
   it("formats dollars", () => expect(dollars(1200)).toBe("$12"));
   it("maps website tiers to seats", () => {
     expect(includedSeatsForTier("Elite")).toBe(5);
-    expect(includedSeatsForTier("nonsense")).toBe(1);
+    expect(includedSeatsForTier("Growth")).toBe(3);
+    expect(includedSeatsForTier("Basic")).toBe(0);
+    expect(includedSeatsForTier("Ultra-Lite")).toBe(0);
+    expect(includedSeatsForTier("nonsense")).toBe(0);
   });
 });

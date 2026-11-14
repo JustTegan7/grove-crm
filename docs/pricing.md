@@ -11,7 +11,7 @@ All prices are placeholders. Change them in `packages/core/src/plans.ts` and now
 
 - Every plan has a 14-day free trial with a card required up front.
 - Pay yearly and get 2 months free (Solo $120 a year, Team $100 per user a year).
-- Evergreen website packages include Grove seats: Ultra-Lite 1, Basic 1, Growth 3, Elite 5 (`INCLUDED_SEATS` in plans.ts). Grove is also sold on its own to people who do not need a website.
+- Grove is included only with the Growth (3 users) and Elite (5 users) website packages (`INCLUDED_SEATS` in plans.ts). Ultra-Lite and Basic clients buy Grove at the standalone price. Grove is also sold on its own to people who do not need a website.
 
 ## Why these numbers (research, Nov 2026)
 - Entry-level small business CRMs cost about $14 to $25 per user per month: Pipedrive and Zoho from $14, HubSpot Starter $15 to $20, Nutshell $13 to $19 on annual billing, Close Essentials $35. Grove undercuts all of them at $10 to $12 and is built for a person working from a phone. The tradeoff is less revenue per customer, so the plan is to win volume first and raise prices for new customers later while keeping early customers at their price.

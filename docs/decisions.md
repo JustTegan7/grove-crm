@@ -151,7 +151,7 @@ The iPhone app comes after the web app. These choices cost little now and a lot 
 
 ## Pricing and billing (v2.1)
 - Plans: Solo $12 flat, Team $10 per user (minimum 2), Dealership $299 per rooftop with 10 users and $15 per extra user. 14-day trial with a card, yearly costs 10 months. Chosen from competitor research to sell easily, set in `packages/core/src/plans.ts`. Full detail and sources in docs/pricing.md.
-- Grove is included in Evergreen website packages by seat count (Ultra-Lite 1, Basic 1, Growth 3, Elite 5) and also sold on its own. Included workspaces use plan "included" and are never billed by Stripe.
+- Grove is included only in the Growth (3 users) and Elite (5 users) website packages, decided by Tegan. Ultra-Lite and Basic clients buy it standalone. It is also sold on its own to people with no website. Included workspaces use plan "included" and are never billed by Stripe.
 - Stripe Checkout builds its prices inline from plans.ts, so no products or price ids exist in the dashboard. A webhook copies subscription state onto the `subscriptions` row, which is what Grove checks.
 - Billing stays off until `GROVE_BILLING=on`. Migration 0006 marks every existing workspace comped, so enabling billing never locks out Evergreen.
 - Seats: invites are blocked when a plan has no room (Solo, or an included package at its limit). Team and Dealership quantities sync to Stripe when people join or leave. Deleting the last member cancels the Stripe subscription.

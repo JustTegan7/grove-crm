@@ -41,10 +41,10 @@ export const PLANS: Record<SellablePlan, PlanDef> = {
   dealership: { key: "dealership", label: "Dealership", blurb: "Per store, with lead rules built for dealerships.", baseCents: 29900, includedUsers: 10, minUnits: 1, extraUserCents: 1500, maxUsers: null, unit: "per rooftop" },
 };
 
-/** Users that come free with each Evergreen website tier. Placeholder numbers. */
-export const INCLUDED_SEATS: Record<Tier, number> = { "Ultra-Lite": 1, Basic: 1, Growth: 3, Elite: 5 };
+/** Users that come free with each Evergreen website tier. Ultra-Lite and Basic do not include Grove; those clients buy it at the standalone price. */
+export const INCLUDED_SEATS: Record<Tier, number> = { "Ultra-Lite": 0, Basic: 0, Growth: 3, Elite: 5 };
 export function includedSeatsForTier(tier: string): number {
-  return (TIERS as readonly string[]).includes(tier) ? INCLUDED_SEATS[tier as Tier] : 1;
+  return (TIERS as readonly string[]).includes(tier) ? INCLUDED_SEATS[tier as Tier] : 0;
 }
 
 export interface LineItem {
