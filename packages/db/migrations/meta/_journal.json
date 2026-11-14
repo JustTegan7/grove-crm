@@ -29,6 +29,13 @@
       "when": 1794678586625,
       "tag": "0003_colorful_agent_brand",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794684933087,
+      "tag": "0004_seed_message_templates",
+      "breakpoints": true
     }
   ]
 }
