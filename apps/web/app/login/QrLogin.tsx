@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import QRCode from "qrcode";
 import { authClient } from "../../lib/auth-client";
 
@@ -55,7 +56,7 @@ export function QrLogin({ next }: { next: string }) {
     <div className="mt-6 text-center">
       <p className="text-sm text-muted">Open Grove on your phone, tap Scan to log in, and point it at this code.</p>
       <div className="mx-auto mt-4 flex h-56 w-56 items-center justify-center rounded-xl border border-line bg-white">
-        {state === "ready" && img ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={img} alt="QR code to log in with the Grove phone app" width={224} height={224} /> : <span className="text-sm text-muted">{state === "loading" ? "One sec..." : state === "expired" ? "Code expired" : "Could not load"}</span>}
+        {state === "ready" && img ? <Image src={img} alt="QR code to log in with the Grove phone app" width={224} height={224} unoptimized /> : <span className="text-sm text-muted">{state === "loading" ? "One sec..." : state === "expired" ? "Code expired" : "Could not load"}</span>}
       </div>
       {(state === "expired" || state === "error") && (
         <button type="button" className="btn btn-soft btn-sm mt-3" onClick={() => setRound((n) => n + 1)}>New code</button>
