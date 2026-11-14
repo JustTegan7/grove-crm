@@ -5,10 +5,12 @@ import { Chip, Empty, Screen } from "../../components/ui";
 import { BusinessRow } from "../../components/BusinessRow";
 import { api } from "../../lib/api";
 import { useMe } from "../../lib/session";
+import { useTheme } from "../../lib/theme";
 import type { BusinessRow as Row } from "../../lib/types";
 
 export default function Pipeline() {
   const me = useMe();
+  const t = useTheme();
   const [stageId, setStageId] = useState(me.stages.find((s) => s.isDefaultNew)?.id ?? me.stages[0]?.id);
   const [rows, setRows] = useState<Row[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -24,8 +26,8 @@ export default function Pipeline() {
   return (
     <>
       <Stack.Screen options={{ title: "Pipeline" }} />
-      <View style={{ flex: 1 }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ padding: 12, gap: 8 }}>
+      <View style={{ flex: 1, backgroundColor: t.bg }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, backgroundColor: t.bg }} contentContainerStyle={{ padding: 12, gap: 8 }}>
           {me.stages.map((s) => <Chip key={s.id} label={s.label} color={s.color} on={s.id === stageId} onPress={() => { setRows(null); setStageId(s.id); }} />)}
         </ScrollView>
         <Screen onRefresh={async () => { setRefreshing(true); await load().catch(() => {}); setRefreshing(false); }} refreshing={refreshing}>
