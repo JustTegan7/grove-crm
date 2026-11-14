@@ -173,3 +173,4 @@ The iPhone app comes after the web app. These choices cost little now and a lot 
 - **Splash** uses `expo-splash-screen` with the brand teal and the logo, set through the config plugin.
 - **Public pages for the stores**: /privacy (real policy, replaces the early-access placeholder), /support and /delete-account (Google Play requires a web deletion URL). All three are public in `proxy.ts` and in the sitemap.
 - **Support email** lives in `siteConfig.supportEmail` so it is changed in one place.
+- **Migration 0006 seed sets its own id.** The first version of the comped-subscriptions seed left out `id`, which has no database default (IDs are made in app code), so it failed on any database that already had workspaces and the Vercel build stopped at the migrate step. The seed now uses `gen_random_uuid()` for those rows only. Migration 0006 was never applied anywhere, so editing it in place is safe.

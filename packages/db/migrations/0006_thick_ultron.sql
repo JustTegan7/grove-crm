@@ -21,4 +21,4 @@ ALTER TABLE "subscriptions" ADD CONSTRAINT "subscriptions_workspace_id_workspace
 CREATE INDEX "subscriptions_stripe_customer" ON "subscriptions" USING btree ("stripe_customer_id");
 --> statement-breakpoint
 -- Every workspace that exists today keeps working free. Only workspaces created after billing goes live start a trial.
-INSERT INTO "subscriptions" ("workspace_id", "plan", "status") SELECT "id", 'comped', 'comped' FROM "workspaces" ON CONFLICT ("workspace_id") DO NOTHING;
+INSERT INTO "subscriptions" ("id", "workspace_id", "plan", "status") SELECT gen_random_uuid(), "id", 'comped', 'comped' FROM "workspaces" ON CONFLICT ("workspace_id") DO NOTHING;
