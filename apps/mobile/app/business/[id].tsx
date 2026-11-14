@@ -19,12 +19,15 @@ export default function BusinessScreen() {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
       setD(await api<BusinessDetail>(`/businesses/${id}`));
+      setLoadError(null);
     } catch (e) {
-      setNotice(e instanceof Error ? e.message : "Could not load this business.");
+      // Keep the error on screen, with a retry, instead of falling back to "Loading..." forever.
+      setLoadError(e instanceof Error ? e.message : "Could not load this business.");
     }
   }, [id]);
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -49,7 +52,14 @@ export default function BusinessScreen() {
     }
   }
 
-  if (!d) return <Screen><Empty text={notice ?? "Loading..."} /></Screen>;
+  if (!d) {
+    return (
+      <Screen>
+        <Empty text={loadError ?? "Loading..."} />
+        {loadError && <Button title="Try again" onPress={() => { setLoadError(null); load(); }} />}
+      </Screen>
+    );
+  }
   const c = d.contact;
   const stage = me.stages.find((s) => s.id === c.stageId);
   const owner = me.members.find((m) => m.id === c.ownerId);
