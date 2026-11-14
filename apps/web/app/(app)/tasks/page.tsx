@@ -4,6 +4,7 @@ import { addDays } from "@grove/core";
 import { getCtx } from "../../../lib/services/ctx";
 import { listOpenTasks, listRecentlyDone } from "../../../lib/services/tasks";
 import { loadMembers } from "../../../lib/services/workspace";
+import { listMessageTemplates } from "../../../lib/services/messages";
 import { toTaskView } from "../../../lib/views";
 import { TaskRow, type TaskView } from "../../../components/app/TaskRow";
 
@@ -14,8 +15,9 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   const { owner } = await searchParams;
   const members = await loadMembers(ctx.workspace.id);
   const ownerId = owner === "all" ? undefined : owner && members.some((m) => m.id === owner) ? owner : ctx.userId;
-  const [open, done] = await Promise.all([listOpenTasks(ctx, { mine: false, ownerId }), listRecentlyDone(ctx, { ownerId })]);
-  const views = open.map((t) => toTaskView(t, members));
+  const [open, done, templates] = await Promise.all([listOpenTasks(ctx, { mine: false, ownerId }), listRecentlyDone(ctx, { ownerId }), listMessageTemplates(ctx)]);
+  const source = { templates, company: ctx.workspace.name, sender: ctx.name };
+  const views = open.map((t) => toTaskView(t, members, source));
   const week = addDays(ctx.today, 7);
   const groups: [string, TaskView[]][] = [
     ["Overdue", views.filter((t) => t.dueDate < ctx.today)],

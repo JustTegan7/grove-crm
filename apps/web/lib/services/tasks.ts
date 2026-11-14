@@ -1,6 +1,6 @@
 import "server-only";
 import { and, asc, desc, eq, gte, isNotNull, isNull, lte, sql } from "drizzle-orm";
-import { contacts, tasks } from "@grove/db";
+import { cadenceSteps, contacts, tasks } from "@grove/db";
 import { addDays, createReminderInput, idInput, onComplete, onStageChange, snoozeDate, updateTaskInput } from "@grove/core";
 import { z } from "zod";
 import { db } from "../db";
@@ -21,6 +21,8 @@ const taskCols = {
   contactId: tasks.contactId,
   contactName: contacts.name,
   contactPhone: contacts.phone,
+  contactPerson: contacts.contactName,
+  stepDay: cadenceSteps.day,
 };
 export type TaskRow = {
   id: string;
@@ -34,6 +36,8 @@ export type TaskRow = {
   contactId: string | null;
   contactName: string | null;
   contactPhone: string | null;
+  contactPerson: string | null;
+  stepDay: number | null;
 };
 
 function baseOpen(ctx: Ctx, mine: boolean) {
@@ -51,6 +55,7 @@ export async function listOpenTasks(ctx: Ctx, opts: { mine: boolean; until?: str
     .select(taskCols)
     .from(tasks)
     .leftJoin(contacts, eq(contacts.id, tasks.contactId))
+    .leftJoin(cadenceSteps, eq(cadenceSteps.id, tasks.cadenceStepId))
     .where(and(...conds, sql`(${contacts.id} is null or ${contacts.deletedAt} is null)`))
     .orderBy(asc(tasks.dueDate), asc(tasks.createdAt))
     .limit(500);
@@ -63,6 +68,7 @@ export async function listRecentlyDone(ctx: Ctx, opts: { ownerId?: string }): Pr
     .select(taskCols)
     .from(tasks)
     .leftJoin(contacts, eq(contacts.id, tasks.contactId))
+    .leftJoin(cadenceSteps, eq(cadenceSteps.id, tasks.cadenceStepId))
     .where(and(...conds))
     .orderBy(desc(tasks.doneAt))
     .limit(30);

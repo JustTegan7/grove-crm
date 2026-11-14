@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
-// Exact-match public routes. Everything else needs a session cookie.
+// Exact-match public routes. Everything else needs a session cookie. The cron route has no cookie and checks CRON_SECRET itself.
 // (The cookie check is a fast first gate; every page and service also
 // checks the real session on the server.)
-const PUBLIC = new Set(["/", "/login", "/reset-password", "/privacy", "/terms", "/robots.txt", "/sitemap.xml"]);
+const PUBLIC = new Set(["/api/cron/retention", "/", "/login", "/reset-password", "/privacy", "/terms", "/robots.txt", "/sitemap.xml"]);
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

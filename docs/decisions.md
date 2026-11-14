@@ -108,6 +108,14 @@ The iPhone app comes after the web app. These choices cost little now and a lot 
 - **Message templates** are per workspace (`message_templates`): channel, optional cadence day, subject (email only) and body, with merge fields `{{business}} {{contact}} {{first_name}} {{owner}} {{company}}`. Pure fill-in rules live in `@grove/core` (`messages.ts`) with tests. Missing values fall back to plain words ("there", "your business") and unknown fields are rejected on save. New workspaces get five starter templates. Owners and managers edit them at `/templates`.
 - **Deferred**: AI-written messages (templates first), a "Copy message" button on tasks, role-based visibility (`canSeeAll`), billing.
 
+## Retention and Copy message (2026-11-14)
+
+- **Retention rule**: a business parked (Recycle Bin or Do Not Contact, found by stage group) for 28 days loses its person details: contact name, role, phone, email and social. Business name, website, stage, notes and history stay, so a Do Not Contact business is still recognised if it is added again. A "Contact details cleared" activity is written. Rules live in `@grove/core` (`retention.ts`) with tests.
+- **No separate 4 week clock for socials.** They clear with the other person details, not on their own timer, so socials stay useful while a lead is active.
+- **The job is off until `GROVE_RETENTION=on`.** Until then the daily cron only reports what it would clear. Turn it on after checking the Recycle Bin: Recycle Bin businesses resurface as a task after 90 days, but their phone and email are gone after 28, so a resurfaced lead needs its details found again. If that is not wanted, limit clearing to Do Not Contact stages.
+- **Cron**: `apps/web/vercel.json` calls `/api/cron/retention` daily at 11:00 UTC. The route needs `CRON_SECRET` set on Vercel (Vercel sends it as a bearer token) and is otherwise 401.
+- **Copy message**: follow-up tasks on Today and Tasks show a Copy message or Copy script button. The template is picked by cadence day and channel (exact day first, then any day for that channel), and filled in with the business, contact first name, the signed-in person and the workspace name. Nothing is sent by Grove.
+
 ## Not decided yet
 
 - Offline sync engine for the phone (build simple "changes since" sync first, pick a library only if needed).
