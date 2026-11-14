@@ -166,3 +166,10 @@ The iPhone app comes after the web app. These choices cost little now and a lot 
 - Auth rate limits moved to database storage with tight rules on sign-in, sign-up and reset. Memory storage does not work across serverless instances. A rate_limit table backs this and the QR login limits.
 - Internal error text (SQL, connection details) is filtered out before it reaches the phone API or server actions.
 - Next.js pinned to 16.4.6 for the critical advisories. Full list and the owner checklist are in docs/security.md.
+
+## Store readiness
+- **Both stores from one app.** Same Expo app ships to iPhone and Android. Android builds an app bundle (`eas.json` production, `buildType: app-bundle`) with an adaptive icon (circles on brand teal).
+- **Icon is opaque.** Apple rejects icons with transparency, so `icon.png` is flattened onto the brand teal.
+- **Splash** uses `expo-splash-screen` with the brand teal and the logo, set through the config plugin.
+- **Public pages for the stores**: /privacy (real policy, replaces the early-access placeholder), /support and /delete-account (Google Play requires a web deletion URL). All three are public in `proxy.ts` and in the sitemap.
+- **Support email** lives in `siteConfig.supportEmail` so it is changed in one place.
