@@ -2,18 +2,18 @@ import { describe, expect, it } from "vitest";
 import { dollars, hasAccess, includedSeatsForTier, priceLines, seatCheck, totalCents } from "./plans";
 
 describe("priceLines", () => {
-  it("solo is flat", () => expect(totalCents(priceLines("solo", { users: 1 }, "month"))).toBe(1900));
+  it("solo is flat", () => expect(totalCents(priceLines("solo", { users: 1 }, "month"))).toBe(1200));
   it("team bills per user with a minimum of two", () => {
-    expect(totalCents(priceLines("team", { users: 1 }, "month"))).toBe(3000);
-    expect(totalCents(priceLines("team", { users: 5 }, "month"))).toBe(7500);
+    expect(totalCents(priceLines("team", { users: 1 }, "month"))).toBe(2000);
+    expect(totalCents(priceLines("team", { users: 5 }, "month"))).toBe(5000);
   });
   it("dealership covers 10 users per rooftop then bills extras", () => {
-    expect(totalCents(priceLines("dealership", { units: 1, users: 8 }, "month"))).toBe(24900);
-    expect(totalCents(priceLines("dealership", { units: 1, users: 13 }, "month"))).toBe(24900 + 3 * 1200);
-    expect(totalCents(priceLines("dealership", { units: 2, users: 18 }, "month"))).toBe(2 * 24900);
-    expect(totalCents(priceLines("dealership", { units: 2, users: 25 }, "month"))).toBe(2 * 24900 + 5 * 1200);
+    expect(totalCents(priceLines("dealership", { units: 1, users: 8 }, "month"))).toBe(29900);
+    expect(totalCents(priceLines("dealership", { units: 1, users: 13 }, "month"))).toBe(29900 + 3 * 1500);
+    expect(totalCents(priceLines("dealership", { units: 2, users: 18 }, "month"))).toBe(2 * 29900);
+    expect(totalCents(priceLines("dealership", { units: 2, users: 25 }, "month"))).toBe(2 * 29900 + 5 * 1500);
   });
-  it("yearly costs ten months", () => expect(totalCents(priceLines("solo", { users: 1 }, "year"))).toBe(19000));
+  it("yearly costs ten months", () => expect(totalCents(priceLines("solo", { users: 1 }, "year"))).toBe(12000));
 });
 
 describe("seatCheck", () => {
@@ -46,7 +46,7 @@ describe("hasAccess", () => {
 });
 
 describe("helpers", () => {
-  it("formats dollars", () => expect(dollars(1900)).toBe("$19"));
+  it("formats dollars", () => expect(dollars(1200)).toBe("$12"));
   it("maps website tiers to seats", () => {
     expect(includedSeatsForTier("Elite")).toBe(5);
     expect(includedSeatsForTier("nonsense")).toBe(1);

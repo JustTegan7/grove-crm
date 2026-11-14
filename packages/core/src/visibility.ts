@@ -11,7 +11,7 @@ export function canSeeAllRecords(role: Role, visibility: Visibility): boolean {
   return role !== "salesperson" || visibility === "team";
 }
 
-/** A new workspace starts private for dealerships, where reps compete for the same customers, and shared otherwise. */
-export function defaultVisibility(accountType: string): Visibility {
-  return accountType === "dealership" ? "own" : "team";
+/** Every new workspace starts private: reps see their own businesses and tasks, and the owner can open it up on the Team page. */
+export function defaultVisibility(_accountType: string): Visibility {
+  return "own";
 }

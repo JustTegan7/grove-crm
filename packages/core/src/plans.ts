@@ -1,7 +1,7 @@
 import { TIERS, type Tier } from "./types";
 
 /**
- * Grove pricing. Placeholder prices: change them here and nowhere else. All amounts are US cents.
+ * Grove pricing, set from competitor research in Nov 2026 (see docs/pricing.md). Change prices here and nowhere else. All amounts are US cents.
  * Checkout builds its price lines from this file, so the Stripe dashboard needs no products or price ids.
  */
 export const PLAN_KEYS = ["solo", "team", "dealership", "included", "comped"] as const;
@@ -36,9 +36,9 @@ export interface PlanDef {
 }
 
 export const PLANS: Record<SellablePlan, PlanDef> = {
-  solo: { key: "solo", label: "Solo", blurb: "One person, a clean lead CRM.", baseCents: 1900, includedUsers: 1, minUnits: 1, extraUserCents: null, maxUsers: 1, unit: "flat" },
-  team: { key: "team", label: "Team", blurb: "A small team sharing one pipeline.", baseCents: 1500, includedUsers: 1, minUnits: 2, extraUserCents: null, maxUsers: null, unit: "per user" },
-  dealership: { key: "dealership", label: "Dealership", blurb: "Per store, with lead rules built for dealerships.", baseCents: 24900, includedUsers: 10, minUnits: 1, extraUserCents: 1200, maxUsers: null, unit: "per rooftop" },
+  solo: { key: "solo", label: "Solo", blurb: "One person, a clean lead CRM.", baseCents: 1200, includedUsers: 1, minUnits: 1, extraUserCents: null, maxUsers: 1, unit: "flat" },
+  team: { key: "team", label: "Team", blurb: "A small team sharing one pipeline.", baseCents: 1000, includedUsers: 1, minUnits: 2, extraUserCents: null, maxUsers: null, unit: "per user" },
+  dealership: { key: "dealership", label: "Dealership", blurb: "Per store, with lead rules built for dealerships.", baseCents: 29900, includedUsers: 10, minUnits: 1, extraUserCents: 1500, maxUsers: null, unit: "per rooftop" },
 };
 
 /** Users that come free with each Evergreen website tier. Placeholder numbers. */

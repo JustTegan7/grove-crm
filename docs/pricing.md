@@ -5,13 +5,18 @@ All prices are placeholders. Change them in `packages/core/src/plans.ts` and now
 ## Plans
 | Plan | Price | Notes |
 | --- | --- | --- |
-| Solo | $19 per month, flat | One user. |
-| Team | $15 per user per month | Minimum 2 users. |
-| Dealership | $249 per rooftop per month | Covers 10 users. Extra users $12 each per month. |
+| Solo | $12 per month, flat | One user. |
+| Team | $10 per user per month | Minimum 2 users, so $20 to start. |
+| Dealership | $299 per rooftop per month | Covers 10 users. Extra users $15 each per month. |
 
 - Every plan has a 14-day free trial with a card required up front.
-- Pay yearly and get 2 months free.
-- Evergreen website packages include Grove seats: Ultra-Lite 1, Basic 1, Growth 3, Elite 5 (placeholder numbers, `INCLUDED_SEATS` in plans.ts). Grove is also sold on its own to people who do not need a website.
+- Pay yearly and get 2 months free (Solo $120 a year, Team $100 per user a year).
+- Evergreen website packages include Grove seats: Ultra-Lite 1, Basic 1, Growth 3, Elite 5 (`INCLUDED_SEATS` in plans.ts). Grove is also sold on its own to people who do not need a website.
+
+## Why these numbers (research, Nov 2026)
+- Entry-level small business CRMs cost about $14 to $25 per user per month: Pipedrive and Zoho from $14, HubSpot Starter $15 to $20, Nutshell $13 to $19 on annual billing, Close Essentials $35. Grove undercuts all of them at $10 to $12 and is built for a person working from a phone. The tradeoff is less revenue per customer, so the plan is to win volume first and raise prices for new customers later while keeping early customers at their price.
+- Dealership CRMs are mostly quote-only. Published numbers run from $299 a month (AutoRaptor, 3 to 5 users) and $498 a month flat (eCars) up to $1,000+ per rooftop for the big names. $299 for 10 users is at the low end on purpose, to land a first pilot store. Grove has no DMS, phone system or texting platform of its own, so pricing it near the big names would not hold. Raise it once Drivonic is connected and it replaces other tools.
+- Sources checked: costbench.com and toolradar.com CRM price roundups, ddiy.co small business CRM comparison, telecrm.in automotive CRM pricing guide, dealerfunnel.com, fitgap.com. Vendor prices change, so recheck before launch.
 
 ## How access works
 - New workspaces start with no subscription and are sent to /billing to start a trial with a card.

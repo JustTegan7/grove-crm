@@ -145,12 +145,12 @@ The iPhone app comes after the web app. These choices cost little now and a lot 
 - Message templates on mobile: each business profile lists templates filled in for that business, with Copy and Open in Messages or Mail. More shows a pointer. Editing stays on the web.
 
 ## Visibility (v2.1)
-- Owners and managers always see every business and task. Salespeople see everything when the workspace is "team" and only their own when it is "own". Owners set this on the Team page. New dealership workspaces start as "own", everything else as "team", and existing workspaces such as Evergreen stay "team".
+- Owners and managers always see every business and task. Salespeople see everything when the workspace is "team" and only their own when it is "own". Owners set this on the Team page. Every new workspace starts as "own" (decided by Tegan). Existing workspaces such as Evergreen stay "team" until an owner changes it.
 - Enforced in services (contacts, tasks, files, duplicate check), not in pages. A hidden business behaves as not found. A duplicate match that belongs to someone else is shown as "A teammate's business" with no link, so a rep still learns the lead is taken.
 - The phone app reads `canSeeAll` from /me and hides the Whole team toggle when false.
 
 ## Pricing and billing (v2.1)
-- Plans: Solo $19 flat, Team $15 per user (minimum 2), Dealership $249 per rooftop with 10 users and $12 per extra user. 14-day trial with a card, yearly costs 10 months. Placeholders, set in `packages/core/src/plans.ts`. Full detail in docs/pricing.md.
+- Plans: Solo $12 flat, Team $10 per user (minimum 2), Dealership $299 per rooftop with 10 users and $15 per extra user. 14-day trial with a card, yearly costs 10 months. Chosen from competitor research to sell easily, set in `packages/core/src/plans.ts`. Full detail and sources in docs/pricing.md.
 - Grove is included in Evergreen website packages by seat count (Ultra-Lite 1, Basic 1, Growth 3, Elite 5) and also sold on its own. Included workspaces use plan "included" and are never billed by Stripe.
 - Stripe Checkout builds its prices inline from plans.ts, so no products or price ids exist in the dashboard. A webhook copies subscription state onto the `subscriptions` row, which is what Grove checks.
 - Billing stays off until `GROVE_BILLING=on`. Migration 0006 marks every existing workspace comped, so enabling billing never locks out Evergreen.

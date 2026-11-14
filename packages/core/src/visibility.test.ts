@@ -15,9 +15,7 @@ describe("canSeeAllRecords", () => {
 });
 
 describe("defaultVisibility", () => {
-  it("dealerships start private, everything else shared", () => {
-    expect(defaultVisibility("dealership")).toBe("own");
-    expect(defaultVisibility("small_business")).toBe("team");
-    expect(defaultVisibility("door_to_door")).toBe("team");
+  it("new workspaces start private whatever the type", () => {
+    for (const t of ["dealership", "small_business", "door_to_door", "big_business"]) expect(defaultVisibility(t)).toBe("own");
   });
 });
