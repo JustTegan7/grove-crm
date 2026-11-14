@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
+import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Body, Button, Card, Chip, Empty, Input, Screen } from "../../components/ui";
-import { api } from "../../lib/api";
+import { api, upload } from "../../lib/api";
 import { dueLabel, firstName, renderMessage } from "../../lib/shared";
 import { callLink, mailLink, open, smsLink } from "../../lib/links";
 import { useMe, useSession } from "../../lib/session";
@@ -19,11 +20,13 @@ export default function BusinessScreen() {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [files, setFiles] = useState<{ id: string; name: string }[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
       setD(await api<BusinessDetail>(`/businesses/${id}`));
+      api<{ files: { id: string; name: string }[] }>(`/businesses/${id}/files`).then((r) => setFiles(r.files)).catch(() => {});
       setLoadError(null);
     } catch (e) {
       // Keep the error on screen, with a retry, instead of falling back to "Loading..." forever.
@@ -47,6 +50,26 @@ export default function BusinessScreen() {
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "That did not work.");
       return false;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function addPhoto(source: "camera" | "library") {
+    try {
+      const perm = source === "camera" ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) return setNotice("Allow access in Settings to add photos.");
+      // Quality 0.5 keeps a phone photo well under the 4 MB upload limit.
+      const opts: ImagePicker.ImagePickerOptions = { mediaTypes: ["images"], quality: 0.5 };
+      const r = source === "camera" ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
+      if (r.canceled || !r.assets[0]) return;
+      const a = r.assets[0];
+      setBusy(true);
+      await upload(`/businesses/${id}/files`, { uri: a.uri, name: a.fileName ?? `photo-${Date.now()}.jpg`, type: a.mimeType ?? "image/jpeg" });
+      setNotice("Photo added.");
+      await load();
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : "Could not add that photo.");
     } finally {
       setBusy(false);
     }
@@ -100,6 +123,15 @@ export default function BusinessScreen() {
             <Body small muted>{dueLabel(x.dueDate, me.today)}</Body>
           </View>
         ))}
+      </Card>
+
+      <Card>
+        <Body small muted>Photos and files ({files.length})</Body>
+        {files.slice(0, 5).map((f) => <Body key={f.id} small>{f.name}</Body>)}
+        <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>
+          <Button small title="Take photo" disabled={busy} onPress={() => addPhoto("camera")} />
+          <Button small kind="soft" title="Choose photo" disabled={busy} onPress={() => addPhoto("library")} />
+        </View>
       </Card>
 
       {me.templates.length > 0 && (

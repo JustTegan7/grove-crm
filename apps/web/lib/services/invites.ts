@@ -3,6 +3,7 @@ import { and, desc, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { invites, user } from "@grove/db";
 import { db } from "../db";
+import { assertCanAddUser } from "./billing";
 import { requireRole, type Ctx } from "./ctx";
 
 const inviteInput = z.object({
@@ -23,6 +24,8 @@ export async function listInvites(ctx: Ctx) {
 export async function inviteMember(ctx: Ctx, raw: unknown) {
   requireRole(ctx, ["owner"]);
   const { email, role } = inviteInput.parse(raw);
+  const pending = await db().select({ id: invites.id }).from(invites).where(and(eq(invites.workspaceId, ctx.workspace.id), isNull(invites.acceptedAt), isNull(invites.deletedAt)));
+  await assertCanAddUser(ctx, pending.length);
   const existing = await db().select({ id: user.id }).from(user).where(eq(user.email, email)).limit(1);
   if (existing.length) throw new Error("That person already has a Grove login. Ask them to contact support to move workspaces.");
   await db()

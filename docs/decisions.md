@@ -143,3 +143,21 @@ The iPhone app comes after the web app. These choices cost little now and a lot 
 - Call, Text and Email on a task open the native app with the message prefilled. Nothing tracks automatically. After the app opens, returning to Grove on Today asks "Finished?" with Mark done or Not yet.
 - Session refresh is silent once signed in, so the tab navigator is no longer rebuilt after an action.
 - Message templates on mobile: each business profile lists templates filled in for that business, with Copy and Open in Messages or Mail. More shows a pointer. Editing stays on the web.
+
+## Visibility (v2.1)
+- Owners and managers always see every business and task. Salespeople see everything when the workspace is "team" and only their own when it is "own". Owners set this on the Team page. Every new workspace starts as "own" (decided by Tegan). Existing workspaces such as Evergreen stay "team" until an owner changes it.
+- Enforced in services (contacts, tasks, files, duplicate check), not in pages. A hidden business behaves as not found. A duplicate match that belongs to someone else is shown as "A teammate's business" with no link, so a rep still learns the lead is taken.
+- The phone app reads `canSeeAll` from /me and hides the Whole team toggle when false.
+
+## Pricing and billing (v2.1)
+- Plans: Solo $12 flat, Team $10 per user (minimum 2), Dealership $299 per rooftop with 10 users and $15 per extra user. 14-day trial with a card, yearly costs 10 months. Chosen from competitor research to sell easily, set in `packages/core/src/plans.ts`. Full detail and sources in docs/pricing.md.
+- Grove is included only in the Growth (3 users) and Elite (5 users) website packages, decided by Tegan. Ultra-Lite and Basic clients buy it standalone. It is also sold on its own to people with no website. Included workspaces use plan "included" and are never billed by Stripe.
+- Stripe Checkout builds its prices inline from plans.ts, so no products or price ids exist in the dashboard. A webhook copies subscription state onto the `subscriptions` row, which is what Grove checks.
+- Billing stays off until `GROVE_BILLING=on`. Migration 0006 marks every existing workspace comped, so enabling billing never locks out Evergreen.
+- Seats: invites are blocked when a plan has no room (Solo, or an included package at its limit). Team and Dealership quantities sync to Stripe when people join or leave. Deleting the last member cancels the Stripe subscription.
+- The iPhone app has no purchase UI, so it stays outside Apple's in-app purchase rules. A blocked workspace gets a 402 from /api/v1.
+
+## Field kit extras (v2.1)
+- Photos: Take photo or Choose photo on a business uploads to the existing private file store through POST /api/v1/businesses/[id]/files. Quality is 0.5 so a phone photo stays under the 4 MB limit.
+- Offline capture: only new leads are queued on the phone, and only when the request never left the phone (no signal). A timeout is not queued, because the server may have saved it and a retry would duplicate it. Queued leads send on app open, on coming back to the app, and when the connection returns, and Today shows how many are waiting.
+- Reminders: a phone registers an Expo push token after the person taps Turn on reminders. A daily cron at 16:00 UTC (8 or 9 in the morning Pacific) sends one push to people with tasks due or overdue, counted in each person's own time zone. Remote push does not work in Expo Go on every platform, so test it in the EAS build.

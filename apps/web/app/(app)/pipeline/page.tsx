@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getCtx } from "../../../lib/services/ctx";
+import { canSeeAll, getCtx } from "../../../lib/services/ctx";
 import { listContacts } from "../../../lib/services/contacts";
 import { loadMembers, loadStages } from "../../../lib/services/workspace";
 import { PipelineBoard } from "../../../components/app/PipelineBoard";
@@ -23,10 +23,10 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">Pipeline</h1>
-        <div className="flex flex-wrap gap-2" aria-label="Owner filter">
+        {canSeeAll(ctx) && <div className="flex flex-wrap gap-2" aria-label="Owner filter">
           {chip("/pipeline", "Everyone", !ownerId)}
           {members.map((m) => chip(`/pipeline?owner=${m.id}`, m.id === ctx.userId ? "Mine" : m.name, ownerId === m.id))}
-        </div>
+        </div>}
       </div>
       <p className="mb-5 mt-1 text-sm text-muted">Drag a card, or use its stage menu. Grove handles the follow-ups when a stage changes.</p>
       <PipelineBoard

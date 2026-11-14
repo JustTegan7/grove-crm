@@ -6,6 +6,9 @@ import { useTheme } from "../lib/theme";
 import { Body, Button, Empty } from "../components/ui";
 import { View } from "react-native";
 
+// Always open on the tabs, and on Today within them.
+export const unstable_settings = { anchor: "(tabs)" };
+
 function Gate() {
   const { state, refresh, signOut } = useSession();
   const t = useTheme();
@@ -22,7 +25,7 @@ function Gate() {
   }
   const out = state.status === "out";
   return (
-    <Stack screenOptions={{ headerStyle: { backgroundColor: t.surface }, headerTintColor: t.fg, contentStyle: { backgroundColor: t.bg } }}>
+    <Stack screenOptions={{ headerStyle: { backgroundColor: t.surface }, headerTintColor: t.fg, headerBackButtonDisplayMode: "minimal", headerShadowVisible: false, contentStyle: { backgroundColor: t.bg } }}>
       <Stack.Protected guard={out}>
         <Stack.Screen name="login" options={{ headerShown: false }} />
       </Stack.Protected>

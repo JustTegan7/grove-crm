@@ -10,6 +10,7 @@ import * as files from "../../lib/services/files";
 import * as team from "../../lib/services/team";
 import * as messages from "../../lib/services/messages";
 import * as invites from "../../lib/services/invites";
+import * as settings from "../../lib/services/settings";
 
 // Thin wrappers: build ctx, call a service, refresh the pages.
 export type ActionResult = { ok: true; message: string; id?: string; undo?: string } | { ok: false; error: string };
@@ -99,4 +100,7 @@ export async function inviteMemberAction(f: FormData) {
 }
 export async function revokeInviteAction(id: string) {
   return run((ctx) => invites.revokeInvite(ctx, { id }));
+}
+export async function setVisibilityAction(f: FormData) {
+  return run((ctx) => settings.setVisibility(ctx, formObj(f)));
 }

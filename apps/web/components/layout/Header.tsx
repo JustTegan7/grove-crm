@@ -13,6 +13,7 @@ export function Header() {
           <a href="#why" className="hidden text-sm text-muted hover:text-fg sm:inline">Why grove</a>
           <a href="#how" className="hidden text-sm text-muted hover:text-fg sm:inline">How it works</a>
           <a href="#faq" className="hidden text-sm text-muted hover:text-fg sm:inline">FAQ</a>
+          <Link href="/pricing" className="hidden text-sm text-muted hover:text-fg sm:inline">Pricing</Link>
           <Link href="/login" className="btn btn-primary btn-sm">Log in</Link>
         </nav>
       </Container>

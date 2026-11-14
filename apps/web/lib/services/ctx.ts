@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { memberships, user, workspaces } from "@grove/db";
-import { todayIn, type Role } from "@grove/core";
+import { canSeeAllRecords, todayIn, type Role, type Visibility } from "@grove/core";
 import { auth } from "../auth";
 import { db } from "../db";
 import { teamAllowlist } from "../team";
@@ -15,7 +15,7 @@ export interface Ctx {
   name: string;
   email: string;
   role: Role;
-  workspace: { id: string; name: string; timezone: string };
+  workspace: { id: string; name: string; timezone: string; visibility: Visibility };
   /** YYYY-MM-DD in the user's (or workspace's) time zone. */
   today: string;
 }
@@ -54,7 +54,7 @@ async function loadCtx(h: Headers): Promise<Ctx | "no-workspace" | null> {
     name: u.name,
     email: u.email,
     role: m.role,
-    workspace: { id: m.ws.id, name: m.ws.name, timezone: m.ws.timezone },
+    workspace: { id: m.ws.id, name: m.ws.name, timezone: m.ws.timezone, visibility: m.ws.visibility === "own" ? "own" : "team" },
     today: todayIn(tz, new Date()),
   };
 }
@@ -71,10 +71,9 @@ export function requireRole(ctx: Ctx, roles: Role[]) {
   if (!roles.includes(ctx.role)) throw new ForbiddenError("You do not have access to do that.");
 }
 
-/** One place to decide who can see what. Lite: everyone sees the whole workspace. */
+/** One place to decide who can see what. Owners and managers see all; salespeople see all only in a shared workspace. */
 export function canSeeAll(ctx: Ctx) {
-  void ctx;
-  return true;
+  return canSeeAllRecords(ctx.role, ctx.workspace.visibility);
 }
 
 /** For /api/v1: the signed-in member from a bearer token or cookie. Null means respond 401. */

@@ -6,7 +6,7 @@ import { z } from "zod";
 import { activities, contactFiles, contacts } from "@grove/db";
 import { FILE_MAX_BYTES, fileContentType, safeFileName } from "@grove/core";
 import { db } from "../db";
-import type { Ctx } from "./ctx";
+import { canSeeAll, type Ctx } from "./ctx";
 
 export class FileError extends Error {}
 
@@ -18,11 +18,12 @@ async function requireContact(ctx: Ctx, contactId: string) {
   const [c] = await db()
     .select({ id: contacts.id })
     .from(contacts)
-    .where(and(eq(contacts.id, contactId), eq(contacts.workspaceId, ctx.workspace.id), isNull(contacts.deletedAt)));
+    .where(and(eq(contacts.id, contactId), eq(contacts.workspaceId, ctx.workspace.id), isNull(contacts.deletedAt), canSeeAll(ctx) ? undefined : eq(contacts.ownerId, ctx.userId)));
   if (!c) throw new FileError("That business was not found.");
 }
 
 export async function listFiles(ctx: Ctx, contactId: string) {
+  await requireContact(ctx, contactId);
   return db()
     .select({ id: contactFiles.id, name: contactFiles.name, contentType: contactFiles.contentType, size: contactFiles.size, createdAt: contactFiles.createdAt, createdBy: contactFiles.createdBy })
     .from(contactFiles)
@@ -61,6 +62,7 @@ export async function deleteFile(ctx: Ctx, raw: unknown) {
     .from(contactFiles)
     .where(and(eq(contactFiles.id, id), eq(contactFiles.workspaceId, ctx.workspace.id), isNull(contactFiles.deletedAt)));
   if (!f) throw new FileError("That file was not found.");
+  await requireContact(ctx, f.contactId);
   requireStore();
   await del(f.blobPathname);
   await db().batch([
@@ -76,7 +78,7 @@ export async function openFile(ctx: Ctx, id: string) {
     .select()
     .from(contactFiles)
     .innerJoin(contacts, eq(contacts.id, contactFiles.contactId))
-    .where(and(eq(contactFiles.id, id), eq(contactFiles.workspaceId, ctx.workspace.id), isNull(contactFiles.deletedAt), isNull(contacts.deletedAt)));
+    .where(and(eq(contactFiles.id, id), eq(contactFiles.workspaceId, ctx.workspace.id), isNull(contactFiles.deletedAt), isNull(contacts.deletedAt), canSeeAll(ctx) ? undefined : eq(contacts.ownerId, ctx.userId)));
   if (!f) return null;
   requireStore();
   const res = await get(f.contact_files.blobPathname, { access: "private" });

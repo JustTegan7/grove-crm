@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Text } from "react-native";
 import { router } from "expo-router";
 import { Button, Input, Screen } from "../components/ui";
-import { api } from "../lib/api";
+import { api, ApiError } from "../lib/api";
+import { queueLead } from "../lib/offline";
 import { useSession } from "../lib/session";
 import { useTheme } from "../lib/theme";
 
@@ -22,6 +23,13 @@ export default function NewLead() {
       await refresh();
       router.replace(`/business/${r.id}`);
     } catch (e) {
+      if (e instanceof ApiError && e.offline) {
+        // No signal: keep the lead on this phone and send it as soon as Grove is reachable.
+        await queueLead(f);
+        await refresh();
+        router.back();
+        return;
+      }
       setError(e instanceof Error ? e.message : "That did not work.");
       setBusy(false);
     }

@@ -6,6 +6,7 @@ import { emailEnabled } from "../../../lib/email";
 import { TempPassword } from "../../../components/app/TempPassword";
 import { listInvites } from "../../../lib/services/invites";
 import { InviteForm, InviteRow } from "../../../components/app/Invites";
+import { VisibilityForm } from "../../../components/app/VisibilityForm";
 
 export const metadata: Metadata = { title: "Team" };
 
@@ -47,6 +48,14 @@ export default async function TeamPage() {
           ))}
         </ul>
       </section>
+
+      {ctx.role === "owner" && (
+        <section className="card p-5" aria-labelledby="h-visibility">
+          <h2 id="h-visibility" className="font-bold">Visibility</h2>
+          <p className="mt-1 text-sm text-muted">Owners and managers always see everything. This sets what salespeople see.</p>
+          <VisibilityForm current={ctx.workspace.visibility} />
+        </section>
+      )}
 
       {ctx.role === "owner" && (
         <section className="card p-5" aria-labelledby="h-invite">

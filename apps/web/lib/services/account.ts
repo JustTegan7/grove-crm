@@ -4,6 +4,7 @@ import { and, asc, eq, isNull, ne } from "drizzle-orm";
 import { z } from "zod";
 import { activities, contactFiles, contacts, invites, memberships, messageTemplates, tasks, user, workspaces } from "@grove/db";
 import { db } from "../db";
+import { cancelSubscription, syncSeats } from "./billing";
 import type { Ctx } from "./ctx";
 
 const ROLE_RANK = { owner: 0, manager: 1, salesperson: 2 } as const;
@@ -31,6 +32,7 @@ export async function deleteAccount(ctx: Ctx, raw: unknown) {
     if (!others.length) {
       const files = await db().select({ path: contactFiles.blobPathname }).from(contactFiles).where(eq(contactFiles.workspaceId, m.workspaceId));
       blobPaths.push(...files.map((f) => f.path));
+      await cancelSubscription(m.workspaceId); // before the row is gone
       await db().delete(workspaces).where(eq(workspaces.id, m.workspaceId)); // cascades to everything inside
       continue;
     }
@@ -54,6 +56,7 @@ export async function deleteAccount(ctx: Ctx, raw: unknown) {
     db().update(invites).set({ invitedBy: null }).where(eq(invites.invitedBy, ctx.userId)),
   ]);
   await db().delete(user).where(eq(user.id, ctx.userId)); // cascades to sessions, logins and memberships
+  for (const m of mine) await syncSeats(m.workspaceId); // a no-op for workspaces that were just deleted
 
   if (blobPaths.length && process.env.BLOB_READ_WRITE_TOKEN) {
     try {

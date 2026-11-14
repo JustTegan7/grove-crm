@@ -1,4 +1,5 @@
 import { api } from "../../../../lib/api/handler";
+import { canSeeAll } from "../../../../lib/services/ctx";
 import { listMessageTemplates } from "../../../../lib/services/messages";
 import { myDueCount } from "../../../../lib/services/tasks";
 import { loadMembers, loadStages, loadSteps } from "../../../../lib/services/workspace";
@@ -16,6 +17,7 @@ export const GET = api(async (ctx) => {
     user: { id: ctx.userId, name: ctx.name, email: ctx.email, role: ctx.role },
     workspace: ctx.workspace,
     today: ctx.today,
+    canSeeAll: canSeeAll(ctx),
     dueCount: due,
     stages,
     steps,
