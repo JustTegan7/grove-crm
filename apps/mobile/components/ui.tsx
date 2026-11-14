@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
+import { ActivityIndicator, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../lib/theme";
 
@@ -10,6 +10,9 @@ export function Screen({ children, onRefresh, refreshing = false, padBottom = 24
       style={{ flex: 1, backgroundColor: t.bg }}
       contentContainerStyle={{ padding: 16, paddingTop: 16, paddingBottom: padBottom + insets.bottom, gap: 12 }}
       keyboardShouldPersistTaps="handled"
+      // Scrolling or dragging down puts the keyboard away, and the screen lifts so the field stays visible.
+      keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+      automaticallyAdjustKeyboardInsets
       refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.muted} /> : undefined}
     >
       {children}
@@ -58,6 +61,7 @@ export function Input(props: TextInputProps & { label: string }) {
       <TextInput
         accessibilityLabel={label}
         placeholderTextColor={t.muted}
+        returnKeyType={rest.multiline ? "default" : "done"}
         style={[{ backgroundColor: t.surface, color: t.fg, borderColor: t.border, borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 12, fontSize: 16 }, style]}
         {...rest}
       />
