@@ -124,6 +124,14 @@ The iPhone app comes after the web app. These choices cost little now and a lot 
 - **QR login to the web**: the login page shows a QR holding a random code (`grove://qr/<code>`) and keeps a separate poll secret in memory. The signed-in phone approves the code. The browser, holding the secret, collects a Better Auth one-time token once and exchanges it for a normal session cookie. Codes live 2 minutes, only hashes are stored, rows are single use, and the token is wiped when collected. The web browser shares the phone's session, so signing out everywhere ends both.
 - **Message templates reach the phone already filled in** (tasks carry `message`), so the phone never needs the merge rules.
 
+## iPhone app v2 (2026-11-14)
+
+- **`apps/mobile` is Expo SDK 58 with Expo Router, outside the root npm workspaces.** React Native and Next.js need different React and tooling trees, so it installs on its own (`cd apps/mobile && npm install`). It imports only dependency-free files from `packages/core` (dates, types) and `packages/brand` through `lib/shared.ts`, with Metro watching `../../packages`.
+- **Screens in v2**: login, Today, Pipeline, Businesses with search, business profile, new lead, Scan to log in. Task actions match the web (complete, tomorrow, they replied, recycle or do not contact, copy message, call and text).
+- **Not in v2 yet**: push reminders, offline capture and sync, direct photo upload. Add after the first App Store build is approved.
+- **Builds use EAS cloud builds** (`eas.json`), so no Mac is needed. Submission needs a paid Apple Developer account.
+- **Placeholder art**: the app icon is the brand mark on teal rendered from `packages/brand`. Replace with final artwork before submission if you want something different.
+
 ## Not decided yet
 
 - Offline sync engine for the phone (build simple "changes since" sync first, pick a library only if needed).
