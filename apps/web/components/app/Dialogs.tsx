@@ -33,7 +33,7 @@ export function NewLeadDialog({ open, onClose, members, meId }: { open: boolean;
   const router = useRouter();
   const [more, setMore] = useState(false);
   // null = not checked yet. A non-empty list means we warned once; the next submit adds anyway.
-  const [dups, setDups] = useState<{ id: string; name: string; reason: string }[] | null>(null);
+  const [dups, setDups] = useState<{ id: string; name: string; reason: string; hidden?: boolean }[] | null>(null);
   const [checking, startCheck] = useTransition();
 
   function create(f: FormData) {
@@ -95,7 +95,7 @@ export function NewLeadDialog({ open, onClose, members, meId }: { open: boolean;
             <ul className="mt-1 space-y-1">
               {dups.map((d) => (
                 <li key={d.id}>
-                  <Link href={`/businesses/${d.id}`} onClick={close} className="font-semibold underline">{d.name}</Link>
+                  {d.hidden ? <span className="font-semibold">{d.name}</span> : <Link href={`/businesses/${d.id}`} onClick={close} className="font-semibold underline">{d.name}</Link>}
                   <span className="text-muted"> ({d.reason})</span>
                 </li>
               ))}

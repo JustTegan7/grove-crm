@@ -94,6 +94,8 @@ export const workspaces = pgTable("workspaces", {
   accountType: accountType("account_type").notNull().default("small_business"),
   timezone: text("timezone").notNull().default("America/Los_Angeles"),
   template: text("template").notNull().default("agency"),
+  // "team": salespeople see everything. "own": salespeople see only their own businesses and tasks.
+  visibility: text("visibility").notNull().default("team"),
   ...stamps,
 });
 

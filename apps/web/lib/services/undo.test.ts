@@ -6,7 +6,7 @@ vi.mock("../db", () => ({ db: () => { throw new Error("no db in tests"); } }));
 import { makeUndo, readUndo } from "./undo";
 import type { Ctx } from "./ctx";
 
-const ctx: Ctx = { userId: "u1", name: "T", email: "t@x.com", role: "owner", workspace: { id: "ws1", name: "W", timezone: "America/Los_Angeles" }, today: "2026-11-01" };
+const ctx: Ctx = { userId: "u1", name: "T", email: "t@x.com", role: "owner", workspace: { id: "ws1", name: "W", timezone: "America/Los_Angeles", visibility: "team" as const }, today: "2026-11-01" };
 const TASK = "00000000-0000-7000-8000-000000000001";
 
 beforeAll(() => { process.env.BETTER_AUTH_SECRET = "test-secret-test-secret-test-secret"; });

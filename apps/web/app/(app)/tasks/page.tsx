@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { addDays } from "@grove/core";
-import { getCtx } from "../../../lib/services/ctx";
+import { canSeeAll, getCtx } from "../../../lib/services/ctx";
 import { listOpenTasks, listRecentlyDone } from "../../../lib/services/tasks";
 import { loadMembers } from "../../../lib/services/workspace";
 import { listMessageTemplates } from "../../../lib/services/messages";
@@ -35,10 +35,10 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   return (
     <div>
       <h1 className="text-3xl font-bold">Tasks</h1>
-      <div className="mt-4 flex flex-wrap gap-2" aria-label="Owner filter">
+      {canSeeAll(ctx) && <div className="mt-4 flex flex-wrap gap-2" aria-label="Owner filter">
         {chip("/tasks?owner=all", "Everyone", owner === "all")}
         {members.map((m) => chip(`/tasks?owner=${m.id}`, m.id === ctx.userId ? "Mine" : m.name, ownerId === m.id))}
-      </div>
+      </div>}
       {groups.map(([label, list]) =>
         list.length ? (
           <section key={label} className="mt-8">

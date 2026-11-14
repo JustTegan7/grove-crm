@@ -4,7 +4,7 @@ import { cadenceSteps, contacts, tasks } from "@grove/db";
 import { addDays, createReminderInput, idInput, onComplete, onStageChange, snoozeDate, updateTaskInput } from "@grove/core";
 import { z } from "zod";
 import { db } from "../db";
-import type { Ctx } from "./ctx";
+import { canSeeAll, type Ctx } from "./ctx";
 import { applyEffects, openTasksFor, toState } from "./effects";
 import { loadStages, loadSteps } from "./workspace";
 import { makeUndo, undoForEffects } from "./undo";
@@ -44,7 +44,8 @@ export type TaskRow = {
 
 function baseOpen(ctx: Ctx, mine: boolean) {
   const c = [eq(tasks.workspaceId, ctx.workspace.id), isNull(tasks.doneAt), isNull(tasks.deletedAt)];
-  if (mine) c.push(eq(tasks.ownerId, ctx.userId));
+  // Someone who cannot see the whole workspace only ever gets their own tasks, whatever was asked for.
+  if (mine || !canSeeAll(ctx)) c.push(eq(tasks.ownerId, ctx.userId));
   return c;
 }
 
@@ -65,6 +66,7 @@ export async function listOpenTasks(ctx: Ctx, opts: { mine: boolean; until?: str
 
 export async function listRecentlyDone(ctx: Ctx, opts: { ownerId?: string }): Promise<TaskRow[]> {
   const conds = [eq(tasks.workspaceId, ctx.workspace.id), isNotNull(tasks.doneAt), isNull(tasks.deletedAt), gte(tasks.dueDate, addDays(ctx.today, -14))];
+  if (!canSeeAll(ctx)) conds.push(eq(tasks.ownerId, ctx.userId));
   if (opts.ownerId) conds.push(eq(tasks.ownerId, opts.ownerId));
   return db()
     .select(taskCols)
@@ -88,7 +90,7 @@ async function getTask(ctx: Ctx, id: string) {
   const [t] = await db()
     .select()
     .from(tasks)
-    .where(and(eq(tasks.id, id), eq(tasks.workspaceId, ctx.workspace.id), isNull(tasks.deletedAt)));
+    .where(and(eq(tasks.id, id), eq(tasks.workspaceId, ctx.workspace.id), isNull(tasks.deletedAt), canSeeAll(ctx) ? undefined : eq(tasks.ownerId, ctx.userId)));
   if (!t) throw new Error("That task was not found.");
   return t;
 }
@@ -132,7 +134,7 @@ export async function createReminder(ctx: Ctx, raw: unknown) {
     const [c] = await db()
       .select({ id: contacts.id })
       .from(contacts)
-      .where(and(eq(contacts.id, input.contactId), eq(contacts.workspaceId, ctx.workspace.id), isNull(contacts.deletedAt)));
+      .where(and(eq(contacts.id, input.contactId), eq(contacts.workspaceId, ctx.workspace.id), isNull(contacts.deletedAt), canSeeAll(ctx) ? undefined : eq(contacts.ownerId, ctx.userId)));
     if (!c) throw new Error("That business was not found.");
     ownerId = ctx.userId;
   }

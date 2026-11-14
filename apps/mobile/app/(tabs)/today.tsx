@@ -84,10 +84,10 @@ export default function Today() {
             </View>
           </View>
         )}
-        <View style={{ flexDirection: "row", gap: 8 }}>
+        {me.canSeeAll && <View style={{ flexDirection: "row", gap: 8 }}>
           <Chip label="My tasks" on={scope === "mine"} onPress={() => setScope("mine")} />
           <Chip label="Whole team" on={scope === "all"} onPress={() => setScope("all")} />
-        </View>
+        </View>}
         {tasks === null ? <Empty text="Loading..." /> : list.length === 0 ? <Empty text="Nothing due. Nice." /> : null}
         {groups.map(([label, items]) =>
           items.length ? <GroupSection key={label} label={label} items={items} today={me.today} busyId={busyId} act={act} setNotice={setNotice} onOpened={(task) => { openedAt.current = Date.now(); setOpened(task); }} /> : null,

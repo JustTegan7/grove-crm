@@ -1,3 +1,4 @@
+import { defaultVisibility } from "@grove/core";
 import "server-only";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
@@ -12,7 +13,7 @@ const MEMBER_COLORS = ["#4FB39C", "#E8B33A", "#7FC28A", "#C8643C", "#6C8CD5", "#
 export async function createWorkspaceFromTemplate(name: string, templateKey = "agency", accountType: AccountType = "small_business") {
   const t = templates[templateKey];
   if (!t) throw new Error(`Unknown template ${templateKey}`);
-  const [ws] = await db().insert(workspaces).values({ name, template: t.key, accountType }).returning();
+  const [ws] = await db().insert(workspaces).values({ name, template: t.key, accountType, visibility: defaultVisibility(accountType) }).returning();
   await db().batch([
     db()
       .insert(pipelineStages)

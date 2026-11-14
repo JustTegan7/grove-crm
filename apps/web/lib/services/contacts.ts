@@ -17,18 +17,23 @@ import {
 } from "@grove/core";
 import { z } from "zod";
 import { db } from "../db";
-import { requireRole, type Ctx } from "./ctx";
+import { canSeeAll, requireRole, type Ctx } from "./ctx";
 import { applyEffects, openTasksFor, toState } from "./effects";
 import { loadMembers, loadStages, loadSteps } from "./workspace";
 import { makeUndo, snapshot, undoForEffects } from "./undo";
 
 export class NotFoundError extends Error {}
 
+/** Rows this member may see. Hidden rows are treated as not found so their existence is not revealed. */
+export function visibleContacts(ctx: Ctx) {
+  return canSeeAll(ctx) ? undefined : eq(contacts.ownerId, ctx.userId);
+}
+
 async function getRow(ctx: Ctx, id: string) {
   const [row] = await db()
     .select()
     .from(contacts)
-    .where(and(eq(contacts.id, id), eq(contacts.workspaceId, ctx.workspace.id), isNull(contacts.deletedAt)));
+    .where(and(eq(contacts.id, id), eq(contacts.workspaceId, ctx.workspace.id), isNull(contacts.deletedAt), visibleContacts(ctx)));
   if (!row) throw new NotFoundError("That business was not found.");
   return row;
 }
@@ -41,7 +46,7 @@ async function ensureMember(ctx: Ctx, userId: string) {
 const nextDue = sql<string | null>`(select min(t.due_date)::text from tasks t where t.contact_id = "contacts"."id" and t.done_at is null and t.deleted_at is null)`;
 
 export async function listContacts(ctx: Ctx, opts: { q?: string; stageId?: string; ownerId?: string; sort?: "next" | "name" } = {}) {
-  const conds = [eq(contacts.workspaceId, ctx.workspace.id), isNull(contacts.deletedAt)];
+  const conds = [eq(contacts.workspaceId, ctx.workspace.id), isNull(contacts.deletedAt), visibleContacts(ctx)];
   if (opts.q) {
     const q = `%${opts.q.replace(/[%_]/g, "")}%`;
     conds.push(or(ilike(contacts.name, q), ilike(contacts.niche, q), ilike(contacts.contactName, q), ilike(contacts.phone, q))!);
@@ -199,7 +204,7 @@ export async function stageCounts(ctx: Ctx) {
   return db()
     .select({ stageId: contacts.stageId, count: sql<number>`count(*)::int` })
     .from(contacts)
-    .where(and(eq(contacts.workspaceId, ctx.workspace.id), isNull(contacts.deletedAt)))
+    .where(and(eq(contacts.workspaceId, ctx.workspace.id), isNull(contacts.deletedAt), visibleContacts(ctx)))
     .groupBy(contacts.stageId);
 }
 
@@ -213,9 +218,14 @@ export async function findDuplicates(ctx: Ctx, raw: unknown) {
   if (phone.length >= 7) conds.push(sql`right(regexp_replace(coalesce(${contacts.phone}, ''), '\D', '', 'g'), 10) = right(${phone}, 10)`);
   if (!conds.length) return [];
   const rows = await db()
-    .select({ id: contacts.id, name: contacts.name, phone: contacts.phone })
+    .select({ id: contacts.id, name: contacts.name, phone: contacts.phone, ownerId: contacts.ownerId })
     .from(contacts)
     .where(and(eq(contacts.workspaceId, ctx.workspace.id), isNull(contacts.deletedAt), or(...conds)))
     .limit(5);
-  return rows.map((r) => ({ id: r.id, name: r.name, reason: normalizeName(r.name) === name ? "same name" : "same phone" }));
+  // A match that belongs to someone else, in a private workspace, is reported without its name or a link.
+  return rows.map((r) => {
+    const reason = normalizeName(r.name) === name ? "same name" : "same phone";
+    const hidden = !canSeeAll(ctx) && r.ownerId !== ctx.userId;
+    return { id: hidden ? `hidden-${r.id.slice(0, 8)}` : r.id, name: hidden ? "A teammate's business" : r.name, reason, hidden };
+  });
 }

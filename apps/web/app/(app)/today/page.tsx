@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { addDays } from "@grove/core";
-import { getCtx } from "../../../lib/services/ctx";
+import { canSeeAll, getCtx } from "../../../lib/services/ctx";
 import { listOpenTasks } from "../../../lib/services/tasks";
 import { stageCounts } from "../../../lib/services/contacts";
 import { loadMembers, loadStages } from "../../../lib/services/workspace";
@@ -19,7 +19,8 @@ function greeting(tz: string) {
 export default async function TodayPage({ searchParams }: { searchParams: Promise<{ who?: string }> }) {
   const ctx = await getCtx();
   const { who } = await searchParams;
-  const mine = who !== "all";
+  const everyone = canSeeAll(ctx);
+  const mine = !everyone || who !== "all";
   const [open, members, stages, counts, templates] = await Promise.all([
     listOpenTasks(ctx, { mine, until: addDays(ctx.today, 7) }),
     loadMembers(ctx.workspace.id),
@@ -46,14 +47,14 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
               {greeting(ctx.workspace.timezone)}, {ctx.name.split(" ")[0]}
             </h1>
           </div>
-          <div className="flex rounded-lg bg-surface-2 p-1 text-sm font-semibold" role="group" aria-label="Whose tasks">
+          {everyone && <div className="flex rounded-lg bg-surface-2 p-1 text-sm font-semibold" role="group" aria-label="Whose tasks">
             <Link href="/today" className={`rounded-md px-3 py-1 ${mine ? "bg-surface shadow-sm" : "text-muted"}`} aria-current={mine ? "true" : undefined}>
               Mine
             </Link>
             <Link href="/today?who=all" className={`rounded-md px-3 py-1 ${!mine ? "bg-surface shadow-sm" : "text-muted"}`} aria-current={!mine ? "true" : undefined}>
               Everyone
             </Link>
-          </div>
+          </div>}
         </div>
 
         {overdue.length + dueToday.length === 0 ? (

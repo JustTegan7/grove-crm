@@ -7,6 +7,7 @@ export interface Me {
   user: { id: string; name: string; email: string; role: Role };
   workspace: { id: string; name: string; timezone: string };
   today: string;
+  canSeeAll: boolean;
   dueCount: number;
   stages: StageDef[];
   steps: CadenceStepDef[];

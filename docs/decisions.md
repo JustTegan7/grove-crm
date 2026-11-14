@@ -143,3 +143,8 @@ The iPhone app comes after the web app. These choices cost little now and a lot 
 - Call, Text and Email on a task open the native app with the message prefilled. Nothing tracks automatically. After the app opens, returning to Grove on Today asks "Finished?" with Mark done or Not yet.
 - Session refresh is silent once signed in, so the tab navigator is no longer rebuilt after an action.
 - Message templates on mobile: each business profile lists templates filled in for that business, with Copy and Open in Messages or Mail. More shows a pointer. Editing stays on the web.
+
+## Visibility (v2.1)
+- Owners and managers always see every business and task. Salespeople see everything when the workspace is "team" and only their own when it is "own". Owners set this on the Team page. New dealership workspaces start as "own", everything else as "team", and existing workspaces such as Evergreen stay "team".
+- Enforced in services (contacts, tasks, files, duplicate check), not in pages. A hidden business behaves as not found. A duplicate match that belongs to someone else is shown as "A teammate's business" with no link, so a rep still learns the lead is taken.
+- The phone app reads `canSeeAll` from /me and hides the Whole team toggle when false.
