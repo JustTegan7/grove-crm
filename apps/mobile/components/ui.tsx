@@ -69,7 +69,7 @@ export function Chip({ label, on, onPress, color }: { label: string; on?: boolea
   const t = useTheme();
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ selected: !!on }} style={{ paddingVertical: 7, paddingHorizontal: 12, borderRadius: 999, backgroundColor: on ? t.primary : t.surface2, flexDirection: "row", alignItems: "center", gap: 6 }}>
-      {color && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />}
+      {color && <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: color, borderWidth: 1.5, borderColor: on ? t.primaryFg : t.surface }} />}
       <Text style={{ color: on ? t.primaryFg : t.fg, fontWeight: "600", fontSize: 14 }}>{label}</Text>
     </Pressable>
   );

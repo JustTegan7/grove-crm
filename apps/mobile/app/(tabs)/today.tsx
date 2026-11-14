@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Text, View } from "react-native";
 import { router, useFocusEffect, Stack } from "expo-router";
-import { Body, Button, Empty, H1, Screen } from "../../components/ui";
+import { Body, Button, Chip, Empty, H1, Screen } from "../../components/ui";
 import { TaskCard } from "../../components/TaskCard";
 import { api } from "../../lib/api";
 import { useMe, useSession } from "../../lib/session";
@@ -84,7 +84,10 @@ export default function Today() {
             </View>
           </View>
         )}
-        <Button small kind="soft" title={scope === "mine" ? "Showing mine. Show everyone's" : "Showing everyone's. Show mine"} onPress={() => setScope(scope === "mine" ? "all" : "mine")} />
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <Chip label="My tasks" on={scope === "mine"} onPress={() => setScope("mine")} />
+          <Chip label="Whole team" on={scope === "all"} onPress={() => setScope("all")} />
+        </View>
         {tasks === null ? <Empty text="Loading..." /> : list.length === 0 ? <Empty text="Nothing due. Nice." /> : null}
         {groups.map(([label, items]) =>
           items.length ? <GroupSection key={label} label={label} items={items} today={me.today} busyId={busyId} act={act} setNotice={setNotice} onOpened={(task) => { openedAt.current = Date.now(); setOpened(task); }} /> : null,
