@@ -1,17 +1,18 @@
 import "server-only";
 import { and, asc, eq, isNull } from "drizzle-orm";
-import { cadenceSteps, memberships, pipelineStages, user, workspaces } from "@grove/db";
-import { templates, type CadenceStepDef, type StageDef } from "@grove/core";
+import { z } from "zod";
+import { cadenceSteps, invites, memberships, messageTemplates, pipelineStages, user, workspaces } from "@grove/db";
+import { ACCOUNT_TYPES, defaultMessageTemplates, templateForAccountType, templates, type AccountType, type CadenceStepDef, type StageDef } from "@grove/core";
 import { db } from "../db";
 import { teamAllowlist } from "../team";
 
 const MEMBER_COLORS = ["#4FB39C", "#E8B33A", "#7FC28A", "#C8643C", "#6C8CD5", "#B07CC6"];
 
-/** Copies an industry template's stages and cadence into a new workspace. */
-export async function createWorkspaceFromTemplate(name: string, templateKey = "agency") {
+/** Copies an industry template's stages, cadence and starter messages into a new workspace. */
+export async function createWorkspaceFromTemplate(name: string, templateKey = "agency", accountType: AccountType = "small_business") {
   const t = templates[templateKey];
   if (!t) throw new Error(`Unknown template ${templateKey}`);
-  const [ws] = await db().insert(workspaces).values({ name, template: t.key }).returning();
+  const [ws] = await db().insert(workspaces).values({ name, template: t.key, accountType }).returning();
   await db().batch([
     db()
       .insert(pipelineStages)
@@ -33,8 +34,61 @@ export async function createWorkspaceFromTemplate(name: string, templateKey = "a
     db()
       .insert(cadenceSteps)
       .values(t.cadence.map((c, i) => ({ workspaceId: ws.id, day: c.day, channel: c.channel, position: i }))),
+    db()
+      .insert(messageTemplates)
+      .values(defaultMessageTemplates.map((m) => ({ workspaceId: ws.id, name: m.name, channel: m.channel, day: m.day, subject: m.subject, body: m.body }))),
   ]);
   return ws;
+}
+
+/** True when anyone may create a workspace. Off until GROVE_OPEN_SIGNUP is "true" on Vercel. */
+export function openSignupEnabled() {
+  return process.env.GROVE_OPEN_SIGNUP === "true";
+}
+
+const startInput = z.object({
+  workspaceName: z.string().trim().min(2, "Give your business a name").max(120),
+  accountType: z.enum(ACCOUNT_TYPES),
+});
+
+/** A signed-in person with no workspace starts their own and becomes its owner. */
+export async function startWorkspace(userId: string, raw: unknown) {
+  if (!openSignupEnabled()) throw new Error("New workspaces are not open yet.");
+  const { workspaceName, accountType } = startInput.parse(raw);
+  const already = await db().select({ id: memberships.id }).from(memberships).where(and(eq(memberships.userId, userId), isNull(memberships.deletedAt))).limit(1);
+  if (already.length) throw new Error("You already have a workspace.");
+  const ws = await createWorkspaceFromTemplate(workspaceName, templateForAccountType[accountType], accountType);
+  await db().insert(memberships).values({ workspaceId: ws.id, userId, role: "owner", color: MEMBER_COLORS[0] }).onConflictDoNothing();
+  return ws;
+}
+
+/** Whether an email has a pending invite. Used to let invited people sign up. */
+export async function hasPendingInvite(email: string) {
+  const rows = await db()
+    .select({ id: invites.id })
+    .from(invites)
+    .where(and(eq(invites.email, email.toLowerCase()), isNull(invites.acceptedAt), isNull(invites.deletedAt)))
+    .limit(1);
+  return rows.length > 0;
+}
+
+/** Turns every pending invite for this email into a membership. */
+export async function acceptInvites(userId: string, email: string) {
+  const pending = await db()
+    .select()
+    .from(invites)
+    .where(and(eq(invites.email, email.toLowerCase()), isNull(invites.acceptedAt), isNull(invites.deletedAt)));
+  for (const inv of pending) {
+    const existing = await db().select({ id: memberships.id }).from(memberships).where(eq(memberships.workspaceId, inv.workspaceId));
+    await db().batch([
+      db()
+        .insert(memberships)
+        .values({ workspaceId: inv.workspaceId, userId, role: inv.role, color: MEMBER_COLORS[existing.length % MEMBER_COLORS.length] })
+        .onConflictDoNothing(),
+      db().update(invites).set({ acceptedAt: new Date() }).where(eq(invites.id, inv.id)),
+    ]);
+  }
+  return pending.length;
 }
 
 /**

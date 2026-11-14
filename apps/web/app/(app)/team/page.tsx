@@ -4,6 +4,8 @@ import { listWaitlist } from "../../../lib/services/team";
 import { loadMembers } from "../../../lib/services/workspace";
 import { emailEnabled } from "../../../lib/email";
 import { TempPassword } from "../../../components/app/TempPassword";
+import { listInvites } from "../../../lib/services/invites";
+import { InviteForm, InviteRow } from "../../../components/app/Invites";
 
 export const metadata: Metadata = { title: "Team" };
 
@@ -17,7 +19,8 @@ export default async function TeamPage() {
       </div>
     );
   }
-  const [members, waitlist] = await Promise.all([loadMembers(ctx.workspace.id), listWaitlist(ctx)]);
+  const [members, waitlist, invites] = await Promise.all([loadMembers(ctx.workspace.id), listWaitlist(ctx), listInvites(ctx)]);
+  const pendingInvites = invites.filter((i) => !i.acceptedAt);
   const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: ctx.workspace.timezone });
 
   return (
@@ -44,6 +47,19 @@ export default async function TeamPage() {
           ))}
         </ul>
       </section>
+
+      {ctx.role === "owner" && (
+        <section className="card p-5" aria-labelledby="h-invite">
+          <h2 id="h-invite" className="font-bold">Invite someone</h2>
+          <p className="mt-1 text-sm text-muted">They sign up with this email and join your workspace with the role you pick.</p>
+          <InviteForm />
+          {pendingInvites.length > 0 && (
+            <ul className="mt-4 divide-y divide-line text-sm">
+              {pendingInvites.map((i) => <InviteRow key={i.id} id={i.id} email={i.email} role={i.role} />)}
+            </ul>
+          )}
+        </section>
+      )}
 
       <section className="card p-5" aria-labelledby="h-waitlist">
         <div className="flex items-baseline justify-between gap-2">

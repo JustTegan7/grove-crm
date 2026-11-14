@@ -8,6 +8,8 @@ import * as tasks from "../../lib/services/tasks";
 import * as undo from "../../lib/services/undo";
 import * as files from "../../lib/services/files";
 import * as team from "../../lib/services/team";
+import * as messages from "../../lib/services/messages";
+import * as invites from "../../lib/services/invites";
 
 // Thin wrappers: build ctx, call a service, refresh the pages.
 export type ActionResult = { ok: true; message: string; id?: string; undo?: string } | { ok: false; error: string };
@@ -85,4 +87,16 @@ export async function findDuplicatesAction(name: string, phone: string) {
 }
 export async function setTemporaryPasswordAction(f: FormData) {
   return run((ctx) => team.setTemporaryPassword(ctx, formObj(f)));
+}
+export async function saveMessageTemplateAction(f: FormData) {
+  return run((ctx) => messages.saveMessageTemplate(ctx, formObj(f)));
+}
+export async function deleteMessageTemplateAction(id: string) {
+  return run((ctx) => messages.deleteMessageTemplate(ctx, { id }));
+}
+export async function inviteMemberAction(f: FormData) {
+  return run((ctx) => invites.inviteMember(ctx, formObj(f)));
+}
+export async function revokeInviteAction(id: string) {
+  return run((ctx) => invites.revokeInvite(ctx, { id }));
 }

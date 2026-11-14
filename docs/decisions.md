@@ -99,6 +99,15 @@ The iPhone app comes after the web app. These choices cost little now and a lot 
 - **Password reset**: Better Auth reset flow with a one hour, single use link, signing the person out everywhere after a reset. Emails go through Resend's HTTP API when `RESEND_API_KEY` and `EMAIL_FROM` are set; until then the request quietly does nothing and the page says to ask an owner. The forgot form gives the same answer for any email so accounts cannot be probed.
 - **Owner fallback**: owners can set a temporary password for a teammate on the Team page (hashed with Better Auth's own hasher, signs them out everywhere). Works without email.
 
+## Workspaces, invites and message templates (2026-11-14)
+
+- **Industry templates in `@grove/core`**: agency (Evergreen), small business, dealership, door to door. Big business starts from small business. A workspace copies its template's stages and cadence on creation, then owns them as data. The engine still never reads stage names.
+- **Dealership stages**: New Lead, Attempting Contact, Contacted, Appointment Set, Showed, Sold (60 day check-ins), Recycle Bin (90 day resurface), Do Not Contact. Same Day 1/3/5/10/14 email, call, text cadence. This is a first draft to adjust after the pilot.
+- **Open sign-up is off by default.** Setting `GROVE_OPEN_SIGNUP=true` on Vercel lets anyone create a login and then a workspace at `/start`. Until then, sign-up still needs the Evergreen team list or an invite.
+- **Invites**: an owner invites a manager or salesperson by email on the Team page. When that email signs up (or is already signed in with no workspace), they join with that role. Already-existing logins cannot be invited, so nobody is moved between workspaces by accident.
+- **Message templates** are per workspace (`message_templates`): channel, optional cadence day, subject (email only) and body, with merge fields `{{business}} {{contact}} {{first_name}} {{owner}} {{company}}`. Pure fill-in rules live in `@grove/core` (`messages.ts`) with tests. Missing values fall back to plain words ("there", "your business") and unknown fields are rejected on save. New workspaces get five starter templates. Owners and managers edit them at `/templates`.
+- **Deferred**: AI-written messages (templates first), a "Copy message" button on tasks, role-based visibility (`canSeeAll`), billing.
+
 ## Not decided yet
 
 - Offline sync engine for the phone (build simple "changes since" sync first, pick a library only if needed).

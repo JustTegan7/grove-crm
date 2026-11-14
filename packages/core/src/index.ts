@@ -6,3 +6,4 @@ export * from "./schemas";
 export * from "./importer";
 export * from "./search";
 export * from "./files";
+export * from "./messages";
