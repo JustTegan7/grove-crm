@@ -1,1 +1,1 @@
-ALTER TABLE "workspaces" ADD COLUMN "visibility" text DEFAULT 'team' NOT NULL;
+ALTER TABLE "workspaces" ADD COLUMN IF NOT EXISTS "visibility" text DEFAULT 'team' NOT NULL;
