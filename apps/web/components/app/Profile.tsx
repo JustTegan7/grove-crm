@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { TIERS } from "@grove/core";
+import { TIERS, extractLinks, webHref } from "@grove/core";
 import {
   assignOwnerAction,
   deleteContactAction,
@@ -71,6 +71,7 @@ export function ProfileActions({
       </div>
       <div className="flex flex-wrap gap-2">
         {contact.phone && <a href={`tel:${contact.phone}`} className="btn btn-soft btn-sm"><IconPhone /> Call</a>}
+        {webHref(contact.website) && <a href={webHref(contact.website)!} target="_blank" rel="noopener noreferrer" className="btn btn-soft btn-sm">Website</a>}
         <button type="button" className="btn btn-soft btn-sm" onClick={() => setRem(true)}><IconBell /> Reminder</button>
         {contact.cadenceActive && (
           <button type="button" className="btn btn-primary btn-sm" disabled={pending} onClick={() => act(() => markRepliedAction(contact.id))}>They replied</button>
@@ -113,7 +114,10 @@ export function ProfileForm({ contact, isClient }: { contact: ProfileContact; is
           <Field name="name" label="Business name" value={contact.name} />
           <Field name="niche" label="Niche" value={contact.niche} />
           <Field name="source" label="How we found them" value={contact.source} />
-          <Field name="website" label="Website, Yelp or Facebook" value={contact.website} />
+          <div>
+            <Field name="website" label="Website, Yelp or Facebook" value={contact.website} />
+            {webHref(contact.website) && <a href={webHref(contact.website)!} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-sm font-semibold underline">Open site</a>}
+          </div>
         </div>
       </fieldset>
       <fieldset className="card space-y-4 p-5">
@@ -127,6 +131,11 @@ export function ProfileForm({ contact, isClient }: { contact: ProfileContact; is
         <div>
           <label className="label" htmlFor="f-social">Socials</label>
           <textarea id="f-social" name="social" defaultValue={contact.social ?? ""} rows={2} className="input" placeholder="Instagram, Facebook, TikTok links" />
+          {extractLinks(contact.social).length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm">
+              {extractLinks(contact.social).map((l) => <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="font-semibold underline">{l.label}</a>)}
+            </div>
+          )}
         </div>
       </fieldset>
       <fieldset className="card space-y-4 p-5">

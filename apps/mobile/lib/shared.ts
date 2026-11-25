@@ -4,3 +4,4 @@ export { tokens, palette } from "../../../packages/brand/src/index";
 export type { StageDef, CadenceStepDef, Channel, Role } from "../../../packages/core/src/types";
 export { dialable } from "../../../packages/core/src/phone";
 export { firstName, renderMessage } from "../../../packages/core/src/messages";
+export { webHref, extractLinks } from "../../../packages/core/src/links";
