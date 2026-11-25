@@ -5,7 +5,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Body, Button, Card, Chip, Empty, Input, Screen } from "../../components/ui";
 import { api, upload } from "../../lib/api";
-import { dueLabel, firstName, renderMessage } from "../../lib/shared";
+import { dueLabel, extractLinks, firstName, renderMessage, webHref } from "../../lib/shared";
 import { callLink, mailLink, open, smsLink } from "../../lib/links";
 import { useMe, useSession } from "../../lib/session";
 import { useTheme } from "../../lib/theme";
@@ -100,11 +100,14 @@ export default function BusinessScreen() {
           {c.phone && <Button small title="Call" onPress={() => open(callLink(c.phone!))} />}
           {c.phone && <Button small kind="soft" title="Text" onPress={() => open(smsLink(c.phone!))} />}
           {c.email && <Button small kind="soft" title="Email" onPress={() => open(mailLink(c.email!))} />}
-          {c.website && <Button small kind="soft" title="Website" onPress={() => open(/^https?:/i.test(c.website!) ? c.website! : `https://${c.website}`)} />}
+          {webHref(c.website) && <Button small kind="soft" title="Website" onPress={() => open(webHref(c.website)!).catch(() => setNotice("Could not open that site."))} />}
         </View>
         {c.phone && <Body small muted>{c.phone}</Body>}
         {c.email && <Body small muted>{c.email}</Body>}
         {c.social && <Body small muted>{c.social}</Body>}
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
+          {extractLinks(c.social).map((l) => <Button key={l.href} small kind="soft" title={l.label} onPress={() => open(l.href).catch(() => setNotice("Could not open that link."))} />)}
+        </View>
       </Card>
 
       <Card>
